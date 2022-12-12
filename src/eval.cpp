@@ -6,14 +6,14 @@
  */
 
 #include "eval.h"
-#include "Input.h"
 #include <stdexcept>
 #include "Compiler.h"
+#include "StringInput.h"
 
 namespace dirac {
 
 void eval(const std::string& expr, std::ostream& output) {
-	Input input{ expr };
+	StringInput input{ expr };
 	try {
 		Compiler compiler;
 		compiler.compile(input);

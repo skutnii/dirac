@@ -5,14 +5,14 @@
  *      Author: skutnii
  */
 
-#include "Input.h"
+#include "StringInput.h"
 
 #include <cctype>
 #include <stdexcept>
 
 namespace dirac {
 
-std::optional<Token> Input::nextToken() {
+std::optional<Token> StringInput::nextToken() {
 	if (_content.empty())
 		return std::optional<Token>{};
 
@@ -44,7 +44,7 @@ std::optional<Token> Input::nextToken() {
 	return std::optional<Token>{};
 }
 
-void Input::skipSpace() {
+void StringInput::skipSpace() {
 	auto iter = _content.begin();
 	while ((iter != _content.end()) && isspace(*iter))
 		++iter;
@@ -52,7 +52,7 @@ void Input::skipSpace() {
 	skipTo(iter);
 }
 
-Number Input::nextNumber() {
+Number StringInput::nextNumber() {
 	std::string tmp;
 	auto iter = _content.begin();
 	while ((iter != _content.end())
@@ -65,7 +65,7 @@ Number Input::nextNumber() {
 	return std::stod(tmp);
 }
 
-std::string Input::nextSymbol() {
+std::string StringInput::nextSymbol() {
 	std::string out;
 	out += _content[0];
 	auto iter = _content.begin() + 1;
@@ -79,11 +79,11 @@ std::string Input::nextSymbol() {
 	return out;
 }
 
-void Input::skipTo(std::string_view::iterator& it) {
+void StringInput::skipTo(std::string_view::iterator& it) {
 	_content = std::string_view{ it, _content.end() };
 }
 
-void Input::skipTo(size_t pos) {
+void StringInput::skipTo(size_t pos) {
 	_content = _content.substr(pos);
 }
 

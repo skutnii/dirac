@@ -18,16 +18,16 @@ namespace dirac {
 /**
  * Splits input into meaningful fragments
  */
-class Input : public InputSequence {
+class StringInput : public InputSequence {
 public:
-	Input(const std::string& src)
+	StringInput(const std::string& src)
 		: _content{src.begin(), src.end()} {};
 
 	std::optional<Token> nextToken() override;
 
 	bool empty() const { return _content.empty(); }
 
-	virtual ~Input() = default;
+	virtual ~StringInput() = default;
 
 	using CharSet = std::unordered_set<char>;
 
