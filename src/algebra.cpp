@@ -47,6 +47,11 @@ Polynomial operator+(const Polynomial& first, const Polynomial& second) {
 	return sum;
 }
 
+Monomial::Monomial(const Monomial &first, const Monomial &second) :
+	coeff{first.coeff * second.coeff} {
+	factors.insert(factors.end(), first.factors.begin(), first.factors.end());
+	factors.insert(factors.end(), second.factors.begin(), second.factors.end());
+}
 
 } //Namespace algebra
 
