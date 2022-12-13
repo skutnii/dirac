@@ -9,6 +9,7 @@
 #include <stdexcept>
 #include "Compiler.h"
 #include "StringInput.h"
+#include "algebra.h"
 
 namespace dirac {
 
