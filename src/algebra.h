@@ -21,7 +21,7 @@ namespace algebra {
 
 struct Monomial {
 	std::complex<double> coeff{ 1, 0 };
-	std::vector<TensorPtr> factors;
+	std::vector<Tensor> factors;
 
 	Monomial() = default;
 	Monomial(const Monomial& other) = default;
@@ -30,7 +30,7 @@ struct Monomial {
 	Monomial& operator=(const Monomial& other) = default;
 
 	Monomial(std::complex<double> z) : coeff{z} {}
-	Monomial(TensorPtr factor) {
+	Monomial(const Tensor& factor) {
 		factors.push_back(factor);
 	}
 
