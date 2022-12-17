@@ -9,11 +9,11 @@
 #include <stdexcept>
 #include "Compiler.h"
 #include "StringInput.h"
-#include "algebra.h"
 
 namespace dirac {
 
 void eval(const std::string& expr, std::ostream& output) {
+
 	StringInput input{ expr };
 	try {
 		Compiler compiler;

@@ -8,6 +8,8 @@
 #include <iostream>
 #include "eval.h"
 
+using namespace dirac;
+
 int main(int argc, char **argv) {
 	std::cout << "This is Dirac matrices calculator by Sergii Kutnii" << std::endl;
 
@@ -20,7 +22,7 @@ int main(int argc, char **argv) {
 			break;
 
 		if (!input.empty())
-			dirac::eval(input, std::cout);
+			eval(input, std::cout);
 	}
 
 	return 0;
