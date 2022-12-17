@@ -10,6 +10,8 @@
 
 #include <Eigen>
 #include "LorentzInvariant.hpp"
+#include <utility>
+#include <optional>
 
 namespace Eigen {
 
@@ -43,7 +45,6 @@ public:
 	using Element = LI::TensorPolynomial;
 	using Value = Eigen::Matrix<Element, 5, 5>;
 
-	PseudoMatrix() = default;
 	PseudoMatrix(const PseudoMatrix& other) = default;
 	PseudoMatrix(PseudoMatrix&& other) = default;
 	PseudoMatrix& operator=(const PseudoMatrix& other) = default;
@@ -70,8 +71,20 @@ public:
 	PseudoMatrix operator+(const PseudoMatrix& other) const;
 
 	PseudoMatrix operator-(const PseudoMatrix& other) const;
+
+	static PseudoMatrix gamma(const TensorIndex& idx, int leftTag, int rightTag);
+	static PseudoMatrix gamma5(int leftTag, int rightTag);
+	static PseudoMatrix sigma(const TensorIndex& idx1,
+			const TensorIndex& idx2,
+			int leftTag,
+			int rightTag);
+
 private:
-	explicit PseudoMatrix(const Value& value) : _value{value} {}
+
+	PseudoMatrix() = default;
+
+	PseudoMatrix(int leftTag, int rightTag, const Value& value = Value{})
+	: _leftTag(leftTag), _rightTag(rightTag), _value{value} {}
 
 	int _leftTag = 1;
 	int _rightTag = 2;

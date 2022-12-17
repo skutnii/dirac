@@ -19,7 +19,7 @@ concept Hashable = requires(T a) {
 };
 
 template<typename T, typename Value>
-concept Restriction = requires(T a, const Value& v) {
+concept Restricts = requires(T a, const Value& v) {
 	{ a.allows(v) } -> std::same_as<bool>;
 };
 

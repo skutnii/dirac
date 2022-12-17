@@ -5,8 +5,8 @@
  *      Author: skutnii
  */
 
-#ifndef SRC_POLYNOMIALRING_HPP_
-#define SRC_POLYNOMIALRING_HPP_
+#ifndef SRC_POLYNOMIALS_HPP_
+#define SRC_POLYNOMIALS_HPP_
 
 #include "concepts.hpp"
 #include <memory>
@@ -56,6 +56,12 @@ struct Polynomial {
 		Term& operator=(const Term& other) = default;
 
 		Term(const Coeff& c) : coeff{ c } {}
+
+		Term(const Factor& f) : Term{} {
+			factors.push_back(f);
+		}
+
+		Term(const Coeff& c, const Factor& f) : coeff{ c }, factors{ f } {}
 	};
 
 	using Terms = std::vector<Term>;
@@ -138,10 +144,55 @@ P prod(const P& p1, const P& p2) {
 	return prod;
 }
 
+/**
+ * Left multiplication of a polynomial by number
+ */
+template<class P, typename Coeff, typename Factor>
+requires std::derived_from<P, Polynomial<Coeff, Factor> >
+P prod(const Coeff& c, const P& p) {
+	P prod;
+	if (p.terms.empty())
+		return prod;
+
+	using Term = Polynomial<Coeff, Factor>::Term;
+	prod.terms.resize(p.terms.size());
+	std::transform(p.terms.begin(), p.terms.end(),
+			prod.terms.begin(),
+			[&c](const Term& t) {
+				Term res{ t };
+				res.coeff = c * t.coeff;
+				return res;
+			});
+
+	return prod;
+}
+
+/**
+ * Right multiplication of a polynomial by number.
+ * Note that in the most general case numbers may be non-commutative.
+ */
+template<class P, typename Coeff, typename Factor>
+requires std::derived_from<P, Polynomial<Coeff, Factor> >
+P prod(const P& p, const Coeff& c) {
+	P prod;
+	if (p.terms.empty())
+		return prod;
+
+	using Term = Polynomial<Coeff, Factor>::Term;
+	prod.terms.resize(p.terms.size());
+	std::transform(p.terms.begin(), p.terms.end(),
+			prod.terms.begin(),
+			[&c](const Term& t) {
+				Term res{ t };
+				res.coeff = t.coeff * c;
+				return res;
+			});
+
+	return prod;
 }
 
 }
 
+}
 
-
-#endif /* SRC_POLYNOMIALRING_HPP_ */
+#endif /* SRC_POLYNOMIALS_HPP_ */

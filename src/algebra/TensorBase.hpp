@@ -14,64 +14,68 @@
 #include <list>
 #include <optional>
 #include <memory>
+#include <limits>
 
 #include "concepts.hpp"
-#include "Tensorial.h"
+#include "Tensorial.hpp"
 
 namespace dirac {
 
 namespace algebra {
 
-template<typename IdType,
-			Restriction<IdType> Basis,
-			typename IndexIdType = IdType>
-class TensorBase : public TensorialBase<IndexIdType> {
+template<Hashable IdType,
+			Restricts<IdType> Basis,
+			typename IndexIdType>
+class TensorBase {
 public:
+	using Self = TensorBase<IdType, Basis, IndexIdType>;
+	using Indices = std::vector<IndexBase<IndexIdType> >;
+
 	TensorBase() = delete;
-	TensorBase(const TensorBase& other) = default;
-	TensorBase(TensorBase&& other) = default;
+	TensorBase(const Self& other) = default;
+	TensorBase(Self&& other) = default;
 
-	static size_t maxIndexCount(const IdType& id);
+	Self& operator=(const Self& other) = default;
 
-	static TensorBase fromId(const IdType& id) {
+	inline static size_t maxIndexCount(const IdType& id) {
+		return std::numeric_limits<size_t>::max();
+	}
+
+	const IdType& id() const { return _id; }
+	const Indices& indices() const { return _indices; };
+
+	unsigned int maxIndices() const { return _maxIndices; };
+	unsigned int actualIndexCount() const { return _indices.size(); }
+	bool complete() const { return (actualIndexCount() >= _maxIndices); }
+
+	//Construct a new instance by appending an index to the end
+	Self operator^(const TensorIndex& idx) {
+		guardMaxIndices(1);
+
+		Self res{ *this };
+		res._indices.push_back(idx);
+
+		return res;
+	}
+
+	Self operator^(const Indices& indices) {
+		guardMaxIndices(indices.size());
+
+
+		Self res{ *this };
+		res._indices.insert(res._indices.end(), indices.begin(), indices.end());
+
+		return res;
+	}
+
+	static Self create(const IdType& id, const Indices& indices = {}) {
 		if (!Basis{}.allows(id))
 			throw std::runtime_error{ "Tensor identifier not in basis" };
 
-		return TensorBase{ id };
+		return Self{ id, indices };
 	}
 
-	TensorBase& operator=(const TensorBase& other) = default;
-
-	const IdType& id() const { return _id; }
-
-	unsigned int maxIndices() const { return _maxIndices; };
-	unsigned int actualIndexCount() const { return Base::indices().size(); }
-	bool complete() const { return (actualIndexCount() >= _maxIndices); }
-
-	using Base = TensorialBase<IndexIdType>;
-	using Index = typename Base::Index;
-	using Indices = typename Base::Indices;
-
-	//Construct a new instance by appending an index to the end
-	TensorBase operator^(const Index& idx) {
-		guardMaxIndices(1);
-
-		Indices tmpIndices = Base::indices();
-		tmpIndices.push_back(idx);
-
-		return TensorBase{ _id, tmpIndices };
-	}
-
-	TensorBase operator^(const Indices& indices) {
-		guardMaxIndices(indices.size());
-
-		Indices tmpIndices = indices();
-		tmpIndices.insert(tmpIndices.end(), indices.begin(), indices.end());
-
-		return TensorBase{ _id, tmpIndices };
-	}
-
-	static TensorBase makeWithIndex(const IdType& id,
+	static Self makeWithIndex(const IdType& id,
 			const IndexIdType& index,
 			bool isUpper) {
 		if (!Basis{}.allows(id))
@@ -82,7 +86,7 @@ public:
 
 		Indices tmpIndices;
 		tmpIndices.emplace_back(index, isUpper);
-		return TensorBase{ id, tmpIndices };
+		return Self{ id, tmpIndices };
 	}
 
 	template<std::input_iterator IBegin, std::sized_sentinel_for<IBegin> IEnd>
@@ -108,17 +112,18 @@ public:
 
 private:
 	explicit TensorBase(const IdType& id,
-			const Indices& indices)
-	: Base{ indices },
-	  _id{ id },
+			const Indices& indices = {})
+	: _id{ id },
+	  _indices{ indices },
 	  _maxIndices{ maxIndexCount(id) } {}
 
 	void guardMaxIndices(size_t extraCount) const {
-		if ((Base::indices().size() + extraCount) > _maxIndices)
+		if ((_indices.size() + extraCount) > _maxIndices)
 			throw std::runtime_error{ "Reached maximum number of indices" };
 	}
 
 	IdType _id;
+	Indices _indices;
 	size_t _maxIndices = 0;
 };
 
