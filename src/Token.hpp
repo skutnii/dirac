@@ -5,8 +5,8 @@
  *      Author: skutnii
  */
 
-#ifndef SRC_TOKEN_H_
-#define SRC_TOKEN_H_
+#ifndef SRC_TOKEN_HPP_
+#define SRC_TOKEN_HPP_
 
 #include <variant>
 #include <string>
@@ -86,4 +86,4 @@ inline bool isValue(const Token& token) {
 
 } /* namespace dirac */
 
-#endif /* SRC_TOKEN_H_ */
+#endif /* SRC_TOKEN_HPP_ */

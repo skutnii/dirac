@@ -10,8 +10,9 @@
 
 #include <string>
 #include <unordered_set>
-#include "Token.h"
-#include "InputSequence.h"
+
+#include "InputSequence.hpp"
+#include "Token.hpp"
 
 namespace dirac {
 

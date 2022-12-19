@@ -5,10 +5,12 @@
  *      Author: skutnii
  */
 
-#include "eval.h"
+#include "eval.hpp"
+
 #include <stdexcept>
-#include "Compiler.h"
-#include "StringInput.h"
+
+#include "Compiler.hpp"
+#include "StringInput.hpp"
 
 namespace dirac {
 

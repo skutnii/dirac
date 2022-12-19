@@ -5,7 +5,7 @@
  *      Author: skutnii
  */
 
-#include "Token.h"
+#include "Token.hpp"
 
 namespace dirac {
 
