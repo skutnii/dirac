@@ -84,7 +84,7 @@ private:
 	PseudoMatrix() = default;
 
 	PseudoMatrix(int leftTag, int rightTag, const Value& value = Value{})
-	: _leftTag(leftTag), _rightTag(rightTag), _value{value} {}
+	: _leftTag{leftTag}, _rightTag{rightTag}, _value{value} {}
 
 	int _leftTag = 1;
 	int _rightTag = 2;
