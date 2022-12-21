@@ -122,6 +122,26 @@ P diff(const P& p1, const P& p2) {
 }
 
 /**
+ * Polynomial negation
+ */
+template<class P, typename CoeffType, typename Factor>
+requires std::derived_from<P, Polynomial<CoeffType, Factor> >
+P negate(const P& p) {
+	P res;
+
+	using Term = Polynomial<CoeffType, Factor>::Term;
+
+	res.terms.resize(p.terms.size());
+	std::transform(p.terms.begin(), p.terms.end(),
+			res.terms.begin(),
+			[](const Term& t) {
+				return -t;
+			});
+
+	return res;
+}
+
+/**
  * Polynomial multiplication
  */
 template<class P, typename CoeffType, typename Factor>

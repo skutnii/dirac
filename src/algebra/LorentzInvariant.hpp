@@ -14,6 +14,7 @@
 #include "TensorBase.hpp"
 #include <complex>
 #include "Polynomials.hpp"
+#include "Complex.hpp"
 
 namespace dirac {
 
@@ -22,8 +23,8 @@ namespace algebra {
 //Lorentz invariant tensors namespace
 namespace LI {
 
-struct TensorBasis {
-	TensorBasis() = default;
+struct Basis {
+	Basis() = default;
 
 	static const std::string eta;
 	static const std::string epsilon;
@@ -35,26 +36,25 @@ struct TensorBasis {
 	inline static bool allows(const std::string& id) {
 		return (Elements.find(id) != Elements.end());
 	}
+
+	inline static size_t maxIndexCount(const std::string& id) {
+		if (id == epsilon)
+			return 4;
+
+		if ((id == delta)
+			|| (id == eta))
+			return 2;
+
+		return 0;
+	}
+
 };
 
 } /* namespace LI*/
 
-template<>
-inline size_t TensorBase<std::string, LI::TensorBasis, IndexId>
-::maxIndexCount(const std::string& id) {
-	if (id == LI::TensorBasis::epsilon)
-		return 4;
-
-	if ((id == LI::TensorBasis::delta)
-		|| (id == LI::TensorBasis::eta))
-		return 2;
-
-	return 0;
-}
-
 namespace LI {
 
-using Tensor = TensorBase<std::string, TensorBasis, IndexId>;
+using Tensor = TensorBase<std::string, Basis, IndexId>;
 
 /**
  * If both indices are either upper or lower, returns metric.
@@ -70,23 +70,9 @@ Tensor epsilon(const TensorIndex& kappa,
 		const TensorIndex& mu,
 		const TensorIndex& nu);
 
-using Complex = std::complex<double>;
-
-inline Complex one() {
-	return Complex{ 1, 0 };
-}
-
-inline Complex I() {
-	return Complex{ 0, 1 };
-}
-
-inline Complex zero() {
-	return Complex{ 0, 0 };
-}
-
 struct TensorPolynomial : public Polynomial<Complex, Tensor> {
 	using Coeff = Complex;
-	using Base = Polynomial<std::complex<double>, Tensor>;
+	using Base = Polynomial<Complex, Tensor>;
 
 	TensorIndices indices;
 
@@ -141,7 +127,7 @@ inline TensorPolynomial operator-(const Tensor& t) {
 
 template<>
 inline void canonicalize<LI::TensorPolynomial,
-	LI::Complex, LI::Tensor>(LI::TensorPolynomial& tp) {
+	Complex, LI::Tensor>(LI::TensorPolynomial& tp) {
 	tp.canonicalize();
 }
 

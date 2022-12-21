@@ -72,7 +72,8 @@ inline std::ostream& operator<<(std::ostream& os, const Op& op) {
 }
 
 using Number = double;
-using Token = std::variant<Op, Number, std::string>;
+using Literal = std::string;
+using Token = std::variant<Op, Number, Literal>;
 
 std::ostream& operator<<(std::ostream& os, const Token& token);
 

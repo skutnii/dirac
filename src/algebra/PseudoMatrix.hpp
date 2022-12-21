@@ -49,6 +49,12 @@ public:
 	PseudoMatrix(PseudoMatrix&& other) = default;
 	PseudoMatrix& operator=(const PseudoMatrix& other) = default;
 
+	//Creates identity matrix multiplied by t
+	PseudoMatrix(const LI::TensorPolynomial& tp);
+
+	//Creates identity matrix multiplied by c
+	PseudoMatrix(const Complex& c);
+
 	const Value& value() { return _value; }
 
 	int leftTag() const {

@@ -115,6 +115,22 @@ PseudoMatrix::sigma(const TensorIndex& mu1, const TensorIndex &mu2,
 	return res;
 }
 
+PseudoMatrix::PseudoMatrix(const LI::TensorPolynomial& tp) {
+	_value(0, 0) = tp;
+	_value(1, 1) = tp;
+	_value(2, 2) = tp;
+	_value(3, 3) = tp;
+	_value(4, 4) = tp;
+}
+
+PseudoMatrix::PseudoMatrix(const Complex &c) {
+	_value(0, 0) = c;
+	_value(1, 1) = c;
+	_value(2, 2) = c;
+	_value(3, 3) = c;
+	_value(4, 4) = c;
+}
+
 } /* namespace algebra */
 
 } /* namespace dirac */
