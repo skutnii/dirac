@@ -24,13 +24,13 @@ namespace dirac {
 class Interpreter {
 public:
 
-	void process(const Token& token);
-	void process(const Op& op);
+	void exec(const Token& token);
+	void exec(const Op& op);
 
 	template<std::input_iterator IToken, std::sentinel_for<IToken> IEnd>
-	void process(const IToken& begin, const IEnd& end) {
+	void exec(const IToken& begin, const IEnd& end) {
 		for (IToken it = begin; it != end; ++it)
-			process(*it);
+			exec(*it);
 	}
 
 	using OpStack = std::deque<OpList>;

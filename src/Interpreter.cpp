@@ -9,9 +9,9 @@
 
 namespace dirac {
 
-void Interpreter::process(const Token& token) {
+void Interpreter::exec(const Token& token) {
 	if (std::holds_alternative<Op>(token))
-		process(std::get<Op>(token));
+		exec(std::get<Op>(token));
 	else if (std::holds_alternative<Number>(token)) {
 		OpList value;
 		value.push_back(std::get<Number>(token));
@@ -20,7 +20,7 @@ void Interpreter::process(const Token& token) {
 		_stack.push_front(OpList{ std::get<Literal>(token) });
 }
 
-void Interpreter::process(const Op& op) {
+void Interpreter::exec(const Op& op) {
 	if (op == Op::Plus)
 		performBinary([](const OpList& l1, const OpList& l2) -> OpList {
 			return l1 + l2;

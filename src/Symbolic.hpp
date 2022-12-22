@@ -13,6 +13,7 @@
 #include <string>
 #include <unordered_set>
 #include "algebra/Polynomials.hpp"
+#include <ostream>
 
 namespace dirac {
 
@@ -56,6 +57,8 @@ using TensorIndices = algebra::TensorIndices;
 
 GammaPolynomial toPolynomial(const Tensor& t);
 
+GammaPolynomial reduceGamma(const GammaPolynomial& p);
+
 }
 
 inline symbolic::GammaPolynomial
@@ -93,6 +96,7 @@ operator*(const symbolic::GammaPolynomial& p,
 	return algebra::prod<symbolic::GammaPolynomial, algebra::Complex, symbolic::Tensor>(p, c);
 }
 
+std::ostream& operator<<(std::ostream& os, const symbolic::GammaPolynomial& poly);
 
 }
 
