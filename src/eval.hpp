@@ -1,5 +1,5 @@
 /*
- * compute.h
+ * eval.h
  *
  *  Created on: Dec 11, 2022
  *      Author: skutnii
