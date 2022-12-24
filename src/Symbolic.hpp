@@ -14,6 +14,7 @@
 #include <unordered_set>
 #include "algebra/Polynomials.hpp"
 #include <ostream>
+#include <vector>
 
 namespace dirac {
 
@@ -55,9 +56,22 @@ using GammaPolynomial = algebra::Polynomial<Complex, Tensor>;
 using TensorIndex = algebra::TensorIndex;
 using TensorIndices = algebra::TensorIndices;
 
+struct CanonicalExpr {
+	struct Term {
+		algebra::LI::TensorPolynomial coeff;
+		TensorIndices indices;
+	};
+
+	Term scalar;
+	Term vector;
+	Term tensor;
+	Term pseudoVector;
+	Term pseudoScalar;
+};
+
 GammaPolynomial toPolynomial(const Tensor& t);
 
-GammaPolynomial reduceGamma(const GammaPolynomial& p);
+CanonicalExpr reduceGamma(const GammaPolynomial& p);
 
 }
 
@@ -95,8 +109,6 @@ operator*(const symbolic::GammaPolynomial& p,
 		const algebra::Complex& c) {
 	return algebra::prod<symbolic::GammaPolynomial, algebra::Complex, symbolic::Tensor>(p, c);
 }
-
-std::ostream& operator<<(std::ostream& os, const symbolic::GammaPolynomial& poly);
 
 }
 

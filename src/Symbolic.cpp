@@ -33,15 +33,11 @@ GammaPolynomial toPolynomial(const Tensor& t) {
 	return res;
 }
 
-GammaPolynomial reduceGamma(const GammaPolynomial &p) {
-	return p; //TODO: implement!
+CanonicalExpr reduceGamma(const GammaPolynomial& p) {
+	return CanonicalExpr{}; //TODO: implement!
 }
 
 }
 
 }
 
-std::ostream& dirac::operator<<(std::ostream& os,
-		const symbolic::GammaPolynomial& poly) {
-	return os; //TODO::implement!
-}

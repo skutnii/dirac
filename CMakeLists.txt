@@ -15,6 +15,7 @@ add_executable(dirac "${SRC_LOC}/main.cpp"
 					 "${SRC_LOC}/Interpreter.cpp"
 					 "${SRC_LOC}/Symbolic.cpp"
 					 "${SRC_LOC}/Operations.cpp"
+					 "${SRC_LOC}/ExprPrinter.cpp"
 					 "${ALGEBRA_LOC}/LorentzInvariant.cpp"
 					 "${ALGEBRA_LOC}/PseudoMatrix.cpp")
 					 

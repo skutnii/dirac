@@ -109,6 +109,17 @@ struct TensorPolynomial : public Polynomial<Complex, Tensor> {
 	}
 
 	void canonicalize();
+
+	bool isZero() const {
+		if (terms.empty())
+			return true;
+
+		for (const Term& term : terms)
+			if (term.coeff != zero())
+				return false;
+
+		return true;
+	}
 };
 
 inline TensorPolynomial operator*(const Complex& c, const TensorPolynomial& p) {

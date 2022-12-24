@@ -15,33 +15,33 @@
 
 namespace dirac {
 
-void eval(const std::string& expr, std::ostream& output) {
-	using namespace symbolic;
+using namespace symbolic;
 
+CanonicalExpr eval(const std::string& expr) {
 	StringInput input{ expr };
-	try {
-		Compiler compiler;
-		compiler.compile(input);
+	Compiler compiler;
+	compiler.compile(input);
 
-		const Executable& opCode = compiler.opCode();
-		Interpreter interpreter;
-		interpreter.exec(opCode.begin(), opCode.end());
+	const Executable& opCode = compiler.opCode();
+	Interpreter interpreter;
+	interpreter.exec(opCode.begin(), opCode.end());
 
-		const Interpreter::OpStack& stack = interpreter.stack();
-		if ((stack.size() != 1) ||
-				(stack.front().size() != 1))
-			throw std::runtime_error{ "Inconsistent expression" };
+	const Interpreter::OpStack& stack = interpreter.stack();
+	if ((stack.size() != 1) ||
+			(stack.front().size() != 1))
+		throw std::runtime_error{ "Inconsistent expression" };
 
-		const Operand& value = stack.front().front();
-		if (std::holds_alternative<Complex>(value))
-			output << std::get<Complex>(value);
-		else if (std::holds_alternative<GammaPolynomial>(value))
-			output << reduceGamma(std::get<GammaPolynomial>(value));
-		else
-			throw std::runtime_error{ "Inconsistent expression" };
-	} catch (std::exception& e) {
-		output << e.what() << std::endl;
-	}
+	const Operand& value = stack.front().front();
+	if (std::holds_alternative<Complex>(value)) {
+		CanonicalExpr res;
+		res.scalar.coeff = std::get<Complex>(value);
+		return res;
+	} else if (std::holds_alternative<GammaPolynomial>(value))
+		return reduceGamma(std::get<GammaPolynomial>(value));
+	else
+		throw std::runtime_error{ "Inconsistent expression" };
+
+	return CanonicalExpr{};
 }
 
 }
