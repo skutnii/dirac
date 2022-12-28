@@ -34,7 +34,7 @@ CanonicalExpr eval(const std::string& expr) {
 	const Operand& value = stack.front().front();
 	if (std::holds_alternative<Complex>(value)) {
 		CanonicalExpr res;
-		res.scalar.coeff = std::get<Complex>(value);
+		res.coeffs(0) = std::get<Complex>(value);
 		return res;
 	} else if (std::holds_alternative<GammaPolynomial>(value))
 		return reduceGamma(std::get<GammaPolynomial>(value));

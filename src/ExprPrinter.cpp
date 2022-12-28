@@ -103,11 +103,11 @@ std::string ExprPrinter::mapIndexId(const IndexId& aId) {
 
 std::string ExprPrinter::latexify(const CanonicalExpr& expr) {
 	LatexTerms latexCoeffs[] = {
-			latexify(expr.scalar.coeff),
-			latexify(expr.vector.coeff),
-			latexify(expr.tensor.coeff),
-			latexify(expr.pseudoVector.coeff),
-			latexify(expr.pseudoScalar.coeff)
+			latexify(expr.coeffs(0)),
+			latexify(expr.coeffs(1)),
+			latexify(expr.coeffs(2)),
+			latexify(expr.coeffs(3)),
+			latexify(expr.coeffs(4))
 	};
 
 	LatexTerms terms;
@@ -125,14 +125,15 @@ std::string ExprPrinter::latexify(const CanonicalExpr& expr) {
 	}
 
 	if (!latexCoeffs[1].empty())
-		terms[1].body += latexify(std::string{ "\\gamma" }, expr.vector.indices);
+		terms[1].body += latexify(std::string{ "\\gamma" }, { expr.vectorIndex });
 
 	if (!latexCoeffs[2].empty())
-		terms[2].body += latexify(std::string{ "\\sigma" }, expr.tensor.indices);
+		terms[2].body += latexify(std::string{ "\\sigma" },
+				{ expr.tensorIndices.first, expr.tensorIndices.second });
 
 	if (!latexCoeffs[3].empty()) {
 		terms[3].body += "\\gamma^5";
-		terms[3].body += latexify(std::string{ "\\gamma" }, expr.pseudoVector.indices);
+		terms[3].body += latexify(std::string{ "\\gamma" }, { expr.pseudoVectorIndex });
 	}
 
 	if (!latexCoeffs[4].empty())

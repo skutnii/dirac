@@ -92,6 +92,33 @@ struct TensorPolynomial : public Polynomial<Complex, Tensor> {
 		return prod<TensorPolynomial, Coeff, Tensor>(*this, c);
 	}
 
+	TensorPolynomial& operator+=(const TensorPolynomial& other) {
+		return add<TensorPolynomial, Coeff, Tensor>(*this, other);
+	}
+
+	TensorPolynomial& operator-=(const TensorPolynomial& other) {
+		return sub<TensorPolynomial, Coeff, Tensor>(*this, other);
+	}
+
+	TensorPolynomial& operator*=(const TensorPolynomial& other) {
+		terms = (*this * other).terms;
+		return *this;
+	}
+
+	TensorPolynomial& operator*=(const Tensor& t) {
+		for (Term& term : terms)
+			term.factors.push_back(t);
+
+		return *this;
+	}
+
+	TensorPolynomial& operator*=(const Complex& c) {
+		for (Term& term : terms)
+			term.coeff = term.coeff * c;
+
+		return *this;
+	}
+
 	TensorPolynomial() = default;
 	TensorPolynomial(const TensorPolynomial& other) = default;
 	TensorPolynomial(TensorPolynomial&& other) = default;
@@ -122,8 +149,24 @@ struct TensorPolynomial : public Polynomial<Complex, Tensor> {
 	}
 };
 
+inline TensorPolynomial ZeroPoly() {
+	return TensorPolynomial();
+}
+
 inline TensorPolynomial operator*(const Complex& c, const TensorPolynomial& p) {
 	return prod<TensorPolynomial, Complex, Tensor>(c, p);
+}
+
+inline TensorPolynomial& operator*=(const Tensor& t, TensorPolynomial& p) {
+	for (TensorPolynomial::Term& term : p.terms)
+		term.factors.insert(term.factors.begin(), t);
+	return p;
+}
+
+inline TensorPolynomial& operator*=(const Complex& c, TensorPolynomial& p) {
+	for (TensorPolynomial::Term& term : p.terms)
+		term.coeff = c * term.coeff;
+	return p;
 }
 
 TensorPolynomial operator*(const Tensor& t1, const Tensor& t2);

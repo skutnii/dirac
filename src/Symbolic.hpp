@@ -15,6 +15,7 @@
 #include "algebra/Polynomials.hpp"
 #include <ostream>
 #include <vector>
+#include "algebra/GammaMatrix.hpp"
 
 namespace dirac {
 
@@ -55,18 +56,30 @@ using GammaPolynomial = algebra::Polynomial<Complex, Tensor>;
 
 using TensorIndex = algebra::TensorIndex;
 using TensorIndices = algebra::TensorIndices;
+using IndexTag = algebra::IndexTag;
 
 struct CanonicalExpr {
-	struct Term {
-		algebra::LI::TensorPolynomial coeff;
-		TensorIndices indices;
-	};
+	algebra::GammaVector coeffs;
 
-	Term scalar;
-	Term vector;
-	Term tensor;
-	Term pseudoVector;
-	Term pseudoScalar;
+	TensorIndex vectorIndex;
+	std::pair<TensorIndex, TensorIndex> tensorIndices;
+	TensorIndex pseudoVectorIndex;
+
+	CanonicalExpr(const TensorIndex& vector,
+			const TensorIndex& tensor1,
+			const TensorIndex& tensor2,
+			const TensorIndex& pseudoVector) :
+				vectorIndex{ vector },
+				tensorIndices{ tensor1, tensor2 },
+				pseudoVectorIndex{ pseudoVector } {}
+
+	CanonicalExpr() :
+		CanonicalExpr{
+			TensorIndex{ IndexTag{ 0, 0 }, true },
+			TensorIndex{ IndexTag{ 0, 1 }, true }, TensorIndex{ IndexTag{ 0, 2 }, true },
+			TensorIndex{ IndexTag{ 0, 0 }, true } }
+	{};
+
 };
 
 GammaPolynomial toPolynomial(const Tensor& t);

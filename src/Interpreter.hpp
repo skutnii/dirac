@@ -9,13 +9,14 @@
 #define SRC_INTERPRETER_HPP_
 
 #include "Token.hpp"
-#include "algebra/PseudoMatrix.hpp"
 #include <variant>
 #include <deque>
 #include <list>
 #include <iterator>
 #include <optional>
 #include <functional>
+
+#include "algebra/GammaMatrix.hpp"
 #include "Symbolic.hpp"
 #include "Operations.hpp"
 
