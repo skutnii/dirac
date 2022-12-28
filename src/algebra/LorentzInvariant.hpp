@@ -14,6 +14,7 @@
 #include "TensorBase.hpp"
 #include <complex>
 #include "Polynomials.hpp"
+#include "Complex.hpp"
 
 namespace dirac {
 
@@ -22,8 +23,8 @@ namespace algebra {
 //Lorentz invariant tensors namespace
 namespace LI {
 
-struct TensorBasis {
-	TensorBasis() = default;
+struct Basis {
+	Basis() = default;
 
 	static const std::string eta;
 	static const std::string epsilon;
@@ -35,26 +36,25 @@ struct TensorBasis {
 	inline static bool allows(const std::string& id) {
 		return (Elements.find(id) != Elements.end());
 	}
+
+	inline static size_t maxIndexCount(const std::string& id) {
+		if (id == epsilon)
+			return 4;
+
+		if ((id == delta)
+			|| (id == eta))
+			return 2;
+
+		return 0;
+	}
+
 };
 
 } /* namespace LI*/
 
-template<>
-inline size_t TensorBase<std::string, LI::TensorBasis, IndexId>
-::maxIndexCount(const std::string& id) {
-	if (id == LI::TensorBasis::epsilon)
-		return 4;
-
-	if ((id == LI::TensorBasis::delta)
-		|| (id == LI::TensorBasis::eta))
-		return 2;
-
-	return 0;
-}
-
 namespace LI {
 
-using Tensor = TensorBase<std::string, TensorBasis, IndexId>;
+using Tensor = TensorBase<std::string, Basis, IndexId>;
 
 /**
  * If both indices are either upper or lower, returns metric.
@@ -70,23 +70,9 @@ Tensor epsilon(const TensorIndex& kappa,
 		const TensorIndex& mu,
 		const TensorIndex& nu);
 
-using Complex = std::complex<double>;
-
-inline Complex one() {
-	return Complex{ 1, 0 };
-}
-
-inline Complex I() {
-	return Complex{ 0, 1 };
-}
-
-inline Complex zero() {
-	return Complex{ 0, 0 };
-}
-
 struct TensorPolynomial : public Polynomial<Complex, Tensor> {
 	using Coeff = Complex;
-	using Base = Polynomial<std::complex<double>, Tensor>;
+	using Base = Polynomial<Complex, Tensor>;
 
 	TensorIndices indices;
 
@@ -106,6 +92,33 @@ struct TensorPolynomial : public Polynomial<Complex, Tensor> {
 		return prod<TensorPolynomial, Coeff, Tensor>(*this, c);
 	}
 
+	TensorPolynomial& operator+=(const TensorPolynomial& other) {
+		return add<TensorPolynomial, Coeff, Tensor>(*this, other);
+	}
+
+	TensorPolynomial& operator-=(const TensorPolynomial& other) {
+		return sub<TensorPolynomial, Coeff, Tensor>(*this, other);
+	}
+
+	TensorPolynomial& operator*=(const TensorPolynomial& other) {
+		terms = (*this * other).terms;
+		return *this;
+	}
+
+	TensorPolynomial& operator*=(const Tensor& t) {
+		for (Term& term : terms)
+			term.factors.push_back(t);
+
+		return *this;
+	}
+
+	TensorPolynomial& operator*=(const Complex& c) {
+		for (Term& term : terms)
+			term.coeff = term.coeff * c;
+
+		return *this;
+	}
+
 	TensorPolynomial() = default;
 	TensorPolynomial(const TensorPolynomial& other) = default;
 	TensorPolynomial(TensorPolynomial&& other) = default;
@@ -123,10 +136,37 @@ struct TensorPolynomial : public Polynomial<Complex, Tensor> {
 	}
 
 	void canonicalize();
+
+	bool isZero() const {
+		if (terms.empty())
+			return true;
+
+		for (const Term& term : terms)
+			if (term.coeff != zero())
+				return false;
+
+		return true;
+	}
 };
+
+inline TensorPolynomial ZeroPoly() {
+	return TensorPolynomial();
+}
 
 inline TensorPolynomial operator*(const Complex& c, const TensorPolynomial& p) {
 	return prod<TensorPolynomial, Complex, Tensor>(c, p);
+}
+
+inline TensorPolynomial& operator*=(const Tensor& t, TensorPolynomial& p) {
+	for (TensorPolynomial::Term& term : p.terms)
+		term.factors.insert(term.factors.begin(), t);
+	return p;
+}
+
+inline TensorPolynomial& operator*=(const Complex& c, TensorPolynomial& p) {
+	for (TensorPolynomial::Term& term : p.terms)
+		term.coeff = c * term.coeff;
+	return p;
 }
 
 TensorPolynomial operator*(const Tensor& t1, const Tensor& t2);
@@ -141,7 +181,7 @@ inline TensorPolynomial operator-(const Tensor& t) {
 
 template<>
 inline void canonicalize<LI::TensorPolynomial,
-	LI::Complex, LI::Tensor>(LI::TensorPolynomial& tp) {
+	Complex, LI::Tensor>(LI::TensorPolynomial& tp) {
 	tp.canonicalize();
 }
 

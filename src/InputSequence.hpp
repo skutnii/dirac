@@ -5,11 +5,11 @@
  *      Author: skutnii
  */
 
-#ifndef SRC_INPUTSEQUENCE_H_
-#define SRC_INPUTSEQUENCE_H_
+#ifndef SRC_INPUTSEQUENCE_HPP_
+#define SRC_INPUTSEQUENCE_HPP_
 
-#include "Token.h"
 #include <optional>
+#include "Token.hpp"
 
 namespace dirac {
 
@@ -22,4 +22,4 @@ public:
 }
 
 
-#endif /* SRC_INPUTSEQUENCE_H_ */
+#endif /* SRC_INPUTSEQUENCE_HPP_ */

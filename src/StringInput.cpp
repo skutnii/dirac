@@ -5,7 +5,7 @@
  *      Author: skutnii
  */
 
-#include "StringInput.h"
+#include "StringInput.hpp"
 
 #include <cctype>
 #include <stdexcept>

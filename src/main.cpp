@@ -6,13 +6,17 @@
  */
 
 #include <iostream>
-#include "eval.h"
+
+#include "eval.hpp"
+#include "ExprPrinter.hpp"
 
 using namespace dirac;
+using namespace symbolic;
 
 int main(int argc, char **argv) {
 	std::cout << "This is Dirac matrices calculator by Sergii Kutnii" << std::endl;
 
+	//Read-eval-print loop
 	std::string input;
 	std::string prompt{"dirac:> "};
 	while(true) {
@@ -21,8 +25,16 @@ int main(int argc, char **argv) {
 		if (input == "quit")
 			break;
 
-		if (!input.empty())
-			eval(input, std::cout);
+		if (input.empty())
+			continue;
+
+		try {
+			CanonicalExpr expr = eval(input);
+			ExprPrinter printer{ "\\omega" };
+			std::cout << printer.latexify(expr) << std::endl;
+		} catch (std::exception& e) {
+			std::cout << e.what() << std::endl;
+		}
 	}
 
 	return 0;

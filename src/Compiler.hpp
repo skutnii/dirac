@@ -5,16 +5,17 @@
  *      Author: skutnii
  */
 
-#ifndef SRC_COMPILER_H_
-#define SRC_COMPILER_H_
+#ifndef SRC_COMPILER_HPP_
+#define SRC_COMPILER_HPP_
 
-#include "Token.h"
 #include <deque>
 #include <optional>
 #include <functional>
 #include <list>
 #include <memory>
-#include "InputSequence.h"
+
+#include "InputSequence.hpp"
+#include "Token.hpp"
 
 namespace dirac {
 
@@ -101,4 +102,4 @@ private:
 
 }
 
-#endif /* SRC_COMPILER_H_ */
+#endif /* SRC_COMPILER_HPP_ */

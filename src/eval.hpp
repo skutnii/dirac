@@ -1,5 +1,5 @@
 /*
- * compute.h
+ * eval.h
  *
  *  Created on: Dec 11, 2022
  *      Author: skutnii
@@ -10,13 +10,14 @@
 
 #include <string>
 #include <ostream>
+#include "Symbolic.hpp"
 
 namespace dirac {
 
 /**
  * Main evaluation routine
  */
-void eval(const std::string& expr, std::ostream& output);
+symbolic::CanonicalExpr eval(const std::string& expr);
 
 }
 

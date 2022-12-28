@@ -15,14 +15,14 @@ namespace algebra {
 
 namespace LI {
 
-const std::string TensorBasis::eta{ "\\eta" };
-const std::string TensorBasis::epsilon{ "\\epsilon" };
-const std::string TensorBasis::delta{ "\\delta" };
+const std::string Basis::eta{ "\\eta" };
+const std::string Basis::epsilon{ "\\epsilon" };
+const std::string Basis::delta{ "\\delta" };
 
-const TensorBasis::NameSet TensorBasis::Elements {
-	TensorBasis::eta,
-	TensorBasis::delta,
-	TensorBasis::epsilon
+const Basis::NameSet Basis::Elements {
+	Basis::eta,
+	Basis::delta,
+	Basis::epsilon
 };
 
 void TensorPolynomial::canonicalize() {
@@ -31,13 +31,13 @@ void TensorPolynomial::canonicalize() {
 
 Tensor eta(const TensorIndex& mu, const TensorIndex& nu) {
 	std::string id = (mu.isUpper == nu.isUpper) ?
-			TensorBasis::eta : TensorBasis::delta;
+			Basis::eta : Basis::delta;
 	return Tensor::create(id, Tensor::Indices{ mu, nu });
 }
 
 Tensor epsilon(const TensorIndex &kappa, const TensorIndex &lambda,
 		const TensorIndex &mu, const TensorIndex &nu) {
-	return Tensor::create(TensorBasis::epsilon,
+	return Tensor::create(Basis::epsilon,
 			 Tensor::Indices{ kappa, lambda, mu, nu });
 }
 

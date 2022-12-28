@@ -5,8 +5,8 @@
  *      Author: skutnii
  */
 
-#ifndef SRC_TOKEN_H_
-#define SRC_TOKEN_H_
+#ifndef SRC_TOKEN_HPP_
+#define SRC_TOKEN_HPP_
 
 #include <variant>
 #include <string>
@@ -72,7 +72,8 @@ inline std::ostream& operator<<(std::ostream& os, const Op& op) {
 }
 
 using Number = double;
-using Token = std::variant<Op, Number, std::string>;
+using Literal = std::string;
+using Token = std::variant<Op, Number, Literal>;
 
 std::ostream& operator<<(std::ostream& os, const Token& token);
 
@@ -86,4 +87,4 @@ inline bool isValue(const Token& token) {
 
 } /* namespace dirac */
 
-#endif /* SRC_TOKEN_H_ */
+#endif /* SRC_TOKEN_HPP_ */

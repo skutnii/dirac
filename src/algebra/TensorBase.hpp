@@ -23,8 +23,14 @@ namespace dirac {
 
 namespace algebra {
 
+template<typename T, typename IdType>
+concept TensorBasis = requires(const IdType& id) {
+	{ T::allows(id) } -> std::same_as<bool>;
+	{ T::maxIndexCount(id) } -> std::same_as<size_t>;
+};
+
 template<Hashable IdType,
-			Restricts<IdType> Basis,
+			TensorBasis<IdType> Basis,
 			typename IndexIdType>
 class TensorBase {
 public:
@@ -36,10 +42,6 @@ public:
 	TensorBase(Self&& other) = default;
 
 	Self& operator=(const Self& other) = default;
-
-	inline static size_t maxIndexCount(const IdType& id) {
-		return std::numeric_limits<size_t>::max();
-	}
 
 	const IdType& id() const { return _id; }
 	const Indices& indices() const { return _indices; };
@@ -69,7 +71,7 @@ public:
 	}
 
 	static Self create(const IdType& id, const Indices& indices = {}) {
-		if (!Basis{}.allows(id))
+		if (!Basis::allows(id))
 			throw std::runtime_error{ "Tensor identifier not in basis" };
 
 		return Self{ id, indices };
@@ -78,10 +80,10 @@ public:
 	static Self makeWithIndex(const IdType& id,
 			const IndexIdType& index,
 			bool isUpper) {
-		if (!Basis{}.allows(id))
+		if (!Basis::allows(id))
 			throw std::runtime_error{ "Tensor identifier not in basis" };
 
-		if (maxIndexCount(id) < 1)
+		if (Basis::maxIndexCount(id) < 1)
 			throw std::runtime_error{ "Subscript operation forbidden" };
 
 		Indices tmpIndices;
@@ -99,7 +101,7 @@ public:
 			throw std::runtime_error{ "Tensor identifier not in basis" };
 
 		size_t idxCount = indexEnd - indexStart;
-		if (idxCount > maxIndexCount(id))
+		if (idxCount > Basis::maxIndexCount(id))
 			throw std::runtime_error{ "Too many tensor indices" };
 
 		Indices tmp;
@@ -115,7 +117,7 @@ private:
 			const Indices& indices = {})
 	: _id{ id },
 	  _indices{ indices },
-	  _maxIndices{ maxIndexCount(id) } {}
+	  _maxIndices{ Basis::maxIndexCount(id) } {}
 
 	void guardMaxIndices(size_t extraCount) const {
 		if ((_indices.size() + extraCount) > _maxIndices)

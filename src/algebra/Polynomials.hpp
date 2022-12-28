@@ -86,17 +86,44 @@ inline void canonicalize(P& p) {
 }
 
 /**
- * Polynomial addition
+ * Mutating polynomial addition ("+=" operator)
+ */
+template<class P, typename CoeffType, typename Factor>
+requires std::derived_from<P, Polynomial<CoeffType, Factor> >
+P& add(P& p1, const P& p2) {
+	p1.terms.insert(p1.terms.end(), p2.terms.begin(), p2.terms.end());
+	canonicalize<P, CoeffType, Factor>(p1);
+	return p1;
+}
+
+/**
+ * Polynomial addition ("+" operator)
  */
 template<class P, typename CoeffType, typename Factor>
 requires std::derived_from<P, Polynomial<CoeffType, Factor> >
 P sum(const P& p1, const P& p2) {
-	P sum;
+	P sum{ p1 };
+	return add<P, CoeffType, Factor>(sum, p2);
+}
 
-	sum.terms.insert(sum.terms.end(), p1.terms.begin(), p1.terms.end());
-	sum.terms.insert(sum.terms.end(), p2.terms.begin(), p2.terms.end());
-	canonicalize<P, CoeffType, Factor>(sum);
-	return sum;
+/**
+ * Mutating polynomial subtraction ("-=" operator)
+ */
+template<class P, typename CoeffType, typename Factor>
+requires std::derived_from<P, Polynomial<CoeffType, Factor> >
+P& sub(P& p1, const P& p2) {
+	using Term = Polynomial<CoeffType, Factor>::Term;
+
+	size_t firstTermCount = p1.terms.size();
+	p1.terms.resize(p1.terms.size() + p2.terms.size());
+	std::transform(p2.terms.begin(), p2.terms.end(),
+			p1.terms.begin() + firstTermCount,
+			[](const Term& t) {
+				return -t;
+			});
+
+	canonicalize<P, CoeffType, Factor>(p1);
+	return p1;
 }
 
 /**
@@ -105,20 +132,28 @@ P sum(const P& p1, const P& p2) {
 template<class P, typename CoeffType, typename Factor>
 requires std::derived_from<P, Polynomial<CoeffType, Factor> >
 P diff(const P& p1, const P& p2) {
-	P diff;
+	P diff{ p1 };
+	return sub<P, CoeffType, Factor>(diff, p2);
+}
+
+/**
+ * Polynomial negation
+ */
+template<class P, typename CoeffType, typename Factor>
+requires std::derived_from<P, Polynomial<CoeffType, Factor> >
+P negate(const P& p) {
+	P res;
 
 	using Term = Polynomial<CoeffType, Factor>::Term;
 
-	diff.terms.insert(diff.terms.end(), p1.terms.begin(), p1.terms.end());
-	diff.terms.resize(p1.terms.size() + p2.terms.size());
-	std::transform(p2.terms.begin(), p2.terms.end(),
-			diff.terms.begin() + p1.terms.size(),
+	res.terms.resize(p.terms.size());
+	std::transform(p.terms.begin(), p.terms.end(),
+			res.terms.begin(),
 			[](const Term& t) {
 				return -t;
 			});
 
-	canonicalize<P, CoeffType, Factor>(diff);
-	return diff;
+	return res;
 }
 
 /**
