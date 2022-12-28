@@ -17,6 +17,28 @@ namespace dirac {
 
 using namespace symbolic;
 
+static CanonicalExpr eval(const Operand& value) {
+	if (std::holds_alternative<Complex>(value)) {
+		CanonicalExpr res;
+		res.coeffs(0) = std::get<Complex>(value);
+		return res;
+	}
+
+	GammaPolynomial poly = getPoly(value);
+
+	return reduceGamma(poly);
+}
+
+static CanonicalExpr eval(const OpList& ops) {
+	if (ops.empty())
+		throw std::runtime_error{ "Empty expression" };
+
+	if (ops.size() == 1)
+		return eval(ops.front());
+
+	return eval(toProduct(ops));
+}
+
 CanonicalExpr eval(const std::string& expr) {
 	StringInput input{ expr };
 	Compiler compiler;
@@ -27,21 +49,10 @@ CanonicalExpr eval(const std::string& expr) {
 	interpreter.exec(opCode.begin(), opCode.end());
 
 	const Interpreter::OpStack& stack = interpreter.stack();
-	if ((stack.size() != 1) ||
-			(stack.front().size() != 1))
+	if (stack.size() != 1)
 		throw std::runtime_error{ "Inconsistent expression" };
 
-	const Operand& value = stack.front().front();
-	if (std::holds_alternative<Complex>(value)) {
-		CanonicalExpr res;
-		res.coeffs(0) = std::get<Complex>(value);
-		return res;
-	} else if (std::holds_alternative<GammaPolynomial>(value))
-		return reduceGamma(std::get<GammaPolynomial>(value));
-	else
-		throw std::runtime_error{ "Inconsistent expression" };
-
-	return CanonicalExpr{};
+	return eval(stack.front());
 }
 
 }

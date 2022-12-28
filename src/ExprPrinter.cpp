@@ -18,8 +18,8 @@ static const std::string leftBrace{ "{" };
 static const std::string rightBrace{ "}" };
 static const std::string hat{ "^" };
 static const std::string subs{ "_" };
-static const std::string leftSquareBracket{ "\\left\\[" };
-static const std::string rightSquareBracket{ "\\right\\]" };
+static const std::string leftSquareBracket{ "\\left[" };
+static const std::string rightSquareBracket{ "\\right]" };
 static const std::string leftBracket{ "\\(" };
 static const std::string rightBracket{ "\\)" };
 
