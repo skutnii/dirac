@@ -20,34 +20,54 @@ static const std::string hat{ "^" };
 static const std::string subs{ "_" };
 static const std::string leftSquareBracket{ "\\left[" };
 static const std::string rightSquareBracket{ "\\right]" };
-static const std::string leftBracket{ "\\(" };
-static const std::string rightBracket{ "\\)" };
+static const std::string leftBracket{ "\\left(" };
+static const std::string rightBracket{ "\\right)" };
 
 std::string
 ExprPrinter::latexify(const std::string& head, const TensorIndices& indices) {
+	using Fragment = std::pair<bool, std::string>; //first: upper or lower flag; second: body
+	std::vector<Fragment> frags;
+
+	//Concatenate adjacent subscript or superscript indices into fragments
+	for (const TensorIndex& idx : indices) {
+		if (frags.empty()
+				|| (frags.back().first && !idx.isUpper)
+				|| (!frags.back().first && idx.isUpper))
+			frags.emplace_back(idx.isUpper, "");
+
+		frags.back().second += mapIndexId(idx.id);
+	}
+
 	std::string value = head;
 
-	for (const TensorIndex& idx : indices)
-		value = leftBrace + value + rightBrace +
-				(idx.isUpper ? hat : subs) +
-						leftBrace + mapIndexId(idx.id) + rightBrace;
+	//Now attach subscript and superscript fragments to the head
+	bool firstFrag = true;
+	for (auto& frag : frags) {
+		if (firstFrag)
+			firstFrag = false;
+		else
+			value = leftBrace + value + rightBrace;
+
+		value += (frag.first ? hat : subs) + leftBrace + frag.second + rightBrace;
+	}
+
 
 	return value;
 }
 
 static std::string to_string(const Complex& c) {
-	std::string value;
+	bool hasReal = (c.real() != 0);
+	bool hasImag = (c.imag() != 0);
 
-	if (c.real() != 0)
+	std::string value;
+	if (hasReal)
 		value += std::to_string(c.real());
 
-	if (c.imag() > 0)
-		value += "+";
+	if (hasReal && (c.imag() > 0))
+		value += " + ";
 
-	if (c.imag() != 0) {
-		value += std::to_string(c.imag());
-		value += "i";
-	}
+	if (hasImag)
+		value += std::to_string(c.imag()) + "I";
 
 	return value;
 }
@@ -72,15 +92,24 @@ ExprPrinter::latexify(const LI::TensorPolynomial& poly) {
 
 		latex.emplace_back();
 		LatexTerm& latexTerm = latex.back();
+
+		for (const LI::Tensor& factor : term.factors)
+			latexTerm.body += latexify(factor);
+
 		latexTerm.sign = sign(term.coeff);
+		if (term.coeff == one())
+			continue;
+
+		if (term.coeff == -one()) {
+			latexTerm.body = "-" + latexTerm.body;
+			continue;
+		}
+
 		std::string coeff = to_string(term.coeff);
 		if ((term.coeff.real() != 0) && (term.coeff.imag() != 0))
 			coeff = leftBracket + coeff + rightBracket;
 
-		latexTerm.body += coeff;
-
-		for (const LI::Tensor& factor : term.factors)
-			latexTerm.body += latexify(factor);
+		latexTerm.body = coeff + latexTerm.body;
 	}
 
 	return latex;

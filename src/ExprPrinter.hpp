@@ -40,6 +40,9 @@ public:
 		std::stringstream latex;
 		bool isFirst = true;
 		for (const LatexTerm& term: latexTerms) {
+			if (term.body.empty())
+				continue;
+
 			if (isFirst)
 				isFirst = false;
 			else
