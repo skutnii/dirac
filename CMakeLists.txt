@@ -17,7 +17,8 @@ add_executable(dirac "${SRC_LOC}/main.cpp"
 					 "${SRC_LOC}/Operations.cpp"
 					 "${SRC_LOC}/ExprPrinter.cpp"
 					 "${ALGEBRA_LOC}/LorentzInvariant.cpp"
-					 "${ALGEBRA_LOC}/GammaMatrix.cpp")
+					 "${ALGEBRA_LOC}/GammaMatrix.cpp"
+					 "${ALGEBRA_LOC}/Rational.cpp")
 					 
 target_include_directories(dirac PUBLIC "${LIB_LOC}/eigen/Eigen"
 										"${SRC_LOC}")

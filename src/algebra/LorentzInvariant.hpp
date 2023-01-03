@@ -15,6 +15,7 @@
 #include <complex>
 #include "Polynomials.hpp"
 #include "Complex.hpp"
+#include "Rational.hpp"
 
 namespace dirac {
 
@@ -56,132 +57,176 @@ namespace LI {
 
 using Tensor = TensorBase<std::string, Basis, IndexId>;
 
-/**
- * If both indices are either upper or lower, returns metric.
- * For a lower and an upper index, returns Kronecker delta.
- */
-Tensor eta(const TensorIndex& mu, const TensorIndex& nu);
-
-/**
- * Returns Levi-Civita symbol with specified indices.
- */
-Tensor epsilon(const TensorIndex& kappa,
-		const TensorIndex& lambda,
-		const TensorIndex& mu,
-		const TensorIndex& nu);
-
-struct TensorPolynomial : public Polynomial<Complex, Tensor> {
-	using Coeff = Complex;
-	using Base = Polynomial<Complex, Tensor>;
+template<typename Scalar>
+struct TensorPolynomial : public Polynomial<Complex<Scalar>, Tensor> {
+	using Coeff = Complex<Scalar>;
+	using Base = Polynomial<Complex<Scalar>, Tensor>;
+	using Term = typename Base::Term;
 
 	TensorIndices indices;
 
-	TensorPolynomial operator+(const TensorPolynomial& other) const {
-		return sum<TensorPolynomial, Coeff, Tensor>(*this, other);
+	TensorPolynomial<Scalar>
+	operator+(const TensorPolynomial<Scalar>& other) const {
+		return sum<TensorPolynomial<Scalar>, Coeff, Tensor>(*this, other);
 	}
 
-	TensorPolynomial operator-(const TensorPolynomial& other) const {
-		return diff<TensorPolynomial, Coeff, Tensor>(*this, other);
+	TensorPolynomial<Scalar>
+	operator-(const TensorPolynomial<Scalar>& other) const {
+		return diff<TensorPolynomial<Scalar>, Coeff, Tensor>(*this, other);
 	}
 
-	TensorPolynomial operator*(const TensorPolynomial& other) const {
-		return prod<TensorPolynomial, Coeff, Tensor>(*this, other);
+	TensorPolynomial<Scalar>
+	operator*(const TensorPolynomial<Scalar>& other) const {
+		return prod<TensorPolynomial<Scalar>, Coeff, Tensor>(*this, other);
 	}
 
-	TensorPolynomial operator*(const Coeff& c) const {
-		return prod<TensorPolynomial, Coeff, Tensor>(*this, c);
+	TensorPolynomial<Scalar> operator*(const Coeff& c) const {
+		return prod<TensorPolynomial<Scalar>, Coeff, Tensor>(*this, c);
 	}
 
-	TensorPolynomial& operator+=(const TensorPolynomial& other) {
-		return add<TensorPolynomial, Coeff, Tensor>(*this, other);
+	TensorPolynomial<Scalar> operator-() const {
+		return negate<TensorPolynomial<Scalar>, Coeff, Tensor>(*this);
 	}
 
-	TensorPolynomial& operator-=(const TensorPolynomial& other) {
-		return sub<TensorPolynomial, Coeff, Tensor>(*this, other);
+	TensorPolynomial<Scalar>& operator+=(const TensorPolynomial<Scalar>& other) {
+		return add<TensorPolynomial<Scalar>, Coeff, Tensor>(*this, other);
 	}
 
-	TensorPolynomial& operator*=(const TensorPolynomial& other) {
-		terms = (*this * other).terms;
+	TensorPolynomial<Scalar>& operator-=(const TensorPolynomial<Scalar>& other) {
+		return sub<TensorPolynomial<Scalar>, Coeff, Tensor>(*this, other);
+	}
+
+	TensorPolynomial<Scalar>& operator*=(const TensorPolynomial<Scalar>& other) {
+		this->terms = (*this * other).terms;
 		return *this;
 	}
 
-	TensorPolynomial& operator*=(const Tensor& t) {
-		for (Term& term : terms)
+	TensorPolynomial<Scalar>& operator*=(const Tensor& t) {
+		for (Term& term : this->terms)
 			term.factors.push_back(t);
 
 		return *this;
 	}
 
-	TensorPolynomial& operator*=(const Complex& c) {
-		for (Term& term : terms)
+	TensorPolynomial<Scalar>& operator*=(const Coeff& c) {
+		for (Term& term : this->terms)
 			term.coeff = term.coeff * c;
 
 		return *this;
 	}
 
 	TensorPolynomial() = default;
-	TensorPolynomial(const TensorPolynomial& other) = default;
-	TensorPolynomial(TensorPolynomial&& other) = default;
-	TensorPolynomial& operator=(const TensorPolynomial& other) = default;
+	TensorPolynomial(const TensorPolynomial<Scalar>& other) = default;
+	TensorPolynomial(TensorPolynomial<Scalar>&& other) = default;
+	TensorPolynomial& operator=(const TensorPolynomial<Scalar>& other) = default;
 
 	TensorPolynomial(const Coeff& c)
 		: Base{} {
 		if ((c.real() != 0) || (c.imag() != 0))
-			terms.emplace_back(c);
+			this->terms.emplace_back(c);
 	}
 
 	TensorPolynomial(const Tensor& t) : Base{} {
-		terms.emplace_back(one(), t);
+		this->terms.emplace_back(one<Scalar>(), t);
 		indices = t.indices();
 	}
 
 	void canonicalize();
 
 	bool isZero() const {
-		if (terms.empty())
+		if (this->terms.empty())
 			return true;
 
-		for (const Term& term : terms)
-			if (term.coeff != zero())
+		for (const Term& term : this->terms)
+			if (term.coeff != zero<Scalar>())
 				return false;
 
 		return true;
 	}
 };
 
-inline TensorPolynomial ZeroPoly() {
-	return TensorPolynomial();
+/**
+ * If both indices are either upper or lower, returns metric.
+ * For a lower and an upper index, returns Kronecker delta.
+ */
+template<typename Scalar>
+TensorPolynomial<Scalar> eta(const TensorIndex& mu, const TensorIndex& nu)  {
+	std::string id = (mu.isUpper == nu.isUpper) ?
+			Basis::eta : Basis::delta;
+	return Tensor::create(id, Tensor::Indices{ mu, nu });
 }
 
-inline TensorPolynomial operator*(const Complex& c, const TensorPolynomial& p) {
-	return prod<TensorPolynomial, Complex, Tensor>(c, p);
+/**
+ * Returns Levi-Civita symbol with specified indices.
+ */
+template<typename Scalar>
+TensorPolynomial<Scalar> epsilon(const TensorIndex& kappa,
+		const TensorIndex& lambda,
+		const TensorIndex& mu,
+		const TensorIndex& nu)  {
+	return Tensor::create(Basis::epsilon,
+			 Tensor::Indices{ kappa, lambda, mu, nu });
 }
 
-inline TensorPolynomial& operator*=(const Tensor& t, TensorPolynomial& p) {
-	for (TensorPolynomial::Term& term : p.terms)
+template<typename Scalar>
+inline TensorPolynomial<Scalar> ZeroPoly() {
+	return TensorPolynomial<Scalar>();
+}
+
+template<typename Scalar>
+inline TensorPolynomial<Scalar> operator*(const Complex<Scalar>& c, const TensorPolynomial<Scalar>& p) {
+	return prod<TensorPolynomial<Scalar>, Complex<Scalar>, Tensor>(c, p);
+}
+
+template<typename Scalar>
+inline TensorPolynomial<Scalar>& operator*=(const Tensor& t, TensorPolynomial<Scalar>& p) {
+	for (typename TensorPolynomial<Scalar>::Term& term : p.terms)
 		term.factors.insert(term.factors.begin(), t);
 	return p;
 }
 
-inline TensorPolynomial& operator*=(const Complex& c, TensorPolynomial& p) {
-	for (TensorPolynomial::Term& term : p.terms)
+template<typename Scalar>
+inline TensorPolynomial<Scalar>& operator*=(const Complex<Scalar>& c, TensorPolynomial<Scalar>& p) {
+	for (typename TensorPolynomial<Scalar>::Term& term : p.terms)
 		term.coeff = c * term.coeff;
 	return p;
 }
 
-TensorPolynomial operator*(const Tensor& t1, const Tensor& t2);
+template<typename Scalar>
+TensorPolynomial<Scalar> operator*(const Tensor& t1, const Tensor& t2) {
+	TensorPolynomial<Scalar> res;
+	res.terms.emplace_back(one<Scalar>());
+	typename TensorPolynomial<Scalar>::Term& term = res.terms.back();
+	term.factors.push_back(t1);
+	term.factors.push_back(t2);
 
-inline TensorPolynomial operator-(const Tensor& t) {
-	TensorPolynomial res{t};
-	res.terms[0].coeff = -one();
+	res.canonicalize();
 	return res;
+}
+
+template<typename Scalar>
+inline TensorPolynomial<Scalar> operator-(const Tensor& t) {
+	TensorPolynomial<Scalar> res{t};
+	res.terms[0].coeff = -one<Scalar>();
+	return res;
+}
+
+template<typename Scalar>
+void TensorPolynomial<Scalar>::canonicalize() {
+	//TODO: implement!
 }
 
 } /*namespace LI*/
 
 template<>
-inline void canonicalize<LI::TensorPolynomial,
-	Complex, LI::Tensor>(LI::TensorPolynomial& tp) {
+inline void canonicalize<LI::TensorPolynomial<double>,
+	Complex<double>, LI::Tensor>(LI::TensorPolynomial<double>& tp) {
+	tp.canonicalize();
+}
+
+template<>
+inline void canonicalize<LI::TensorPolynomial<Rational>,
+	Complex<Rational>, LI::Tensor>(LI::TensorPolynomial<Rational>& tp) {
 	tp.canonicalize();
 }
 

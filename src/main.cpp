@@ -29,8 +29,8 @@ int main(int argc, char **argv) {
 			continue;
 
 		try {
-			CanonicalExpr expr = eval(input);
-			ExprPrinter printer{ "\\omega" };
+			CanonicalExpr<double> expr = eval<double>(input);
+			ExprPrinter<double> printer{ "\\omega" };
 			std::cout << printer.latexify(expr) << std::endl;
 		} catch (std::exception& e) {
 			std::cout << e.what() << std::endl;

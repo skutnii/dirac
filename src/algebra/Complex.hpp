@@ -12,18 +12,22 @@ namespace dirac {
 
 namespace algebra {
 
-using Complex = std::complex<double>;
+template<typename Scalar>
+using Complex = std::complex<Scalar>;
 
-inline Complex one() {
-	return Complex{ 1, 0 };
+template<typename Scalar>
+inline Complex<Scalar> one() {
+	return Complex<Scalar>{ 1, 0 };
 }
 
-inline Complex I() {
-	return Complex{ 0, 1 };
+template<typename Scalar>
+inline Complex<Scalar> I() {
+	return Complex<Scalar>{ 0, 1 };
 }
 
-inline Complex zero() {
-	return Complex{ 0, 0 };
+template<typename Scalar>
+inline Complex<Scalar> zero() {
+	return Complex<Scalar>{ 0, 0 };
 }
 
 }
