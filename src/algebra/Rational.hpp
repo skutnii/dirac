@@ -77,8 +77,19 @@ public:
 	}
 
 	bool operator>(const Rational& other) const {
+		if (!finite() || !other.finite())
+			return false;
+
 		return (num() * static_cast<unsigned long long>(other.den())
 				> other.num() * static_cast<unsigned long long>(den()));
+	}
+
+	bool operator<(const Rational& other) const {
+		if (!finite() || !other.finite())
+			return false;
+
+		return (num() * static_cast<unsigned long long>(other.den())
+				< other.num() * static_cast<unsigned long long>(den()));
 	}
 
 	Rational& operator+=(const Rational& other) {

@@ -34,6 +34,31 @@ ExprPrinter<algebra::Rational>::latexify(const algebra::Rational& r) {
 	return ss.str();
 }
 
+template<>
+std::string ExprPrinter<Rational>::latexify(const Complex<Rational>& c) {
+	bool hasReal = (c.real() != 0);
+	bool hasImag = (c.imag() != 0);
+
+	std::string value;
+	if (hasReal)
+		value += latexify(c.real());
+
+	if (hasReal && (c.imag() > 0))
+		value += " + ";
+	else if (c.imag() < 0)
+		value += " - ";
+
+	if (hasImag) {
+		value += "\\frac{";
+		unsigned long long absNum = c.imag().absNum();
+		if (absNum != 1)
+			value += std::to_string(absNum);
+		value += std::string{ "I}{" } + std::to_string(c.imag().den()) + "}";
+	}
+
+	return value;
+}
+
 } /* namespace symbolic */
 
 } /* namespace dirac */

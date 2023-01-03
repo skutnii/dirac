@@ -134,6 +134,10 @@ std::string ExprPrinter<Scalar>::latexify(const Complex<Scalar>& c) {
 	return value;
 }
 
+template<>
+std::string
+ExprPrinter<algebra::Rational>::latexify(const Complex<algebra::Rational>& c);
+
 template<typename Scalar>
 std::string sign(const Complex<Scalar>& c) {
 	Scalar zero = static_cast<Scalar>(0);
