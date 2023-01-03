@@ -21,5 +21,4 @@ const Op Op::Subs{'_'}; // subscript _
 const Op Op::Super{'^'}; // superscript ^
 const Op Op::Splice {'&'}; // list concatenation
 
-
 }

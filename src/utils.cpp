@@ -29,7 +29,6 @@ std::vector<std::string> get_words(const std::string &str) {
 	return words;
 }
 
-
 }
 
 }
