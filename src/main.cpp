@@ -13,6 +13,17 @@
 using namespace dirac;
 using namespace symbolic;
 
+template<typename Number>
+void process(const std::string& input, std::ostream& output) {
+	try {
+		CanonicalExpr<Number> expr = eval<Number>(input);
+		ExprPrinter<Number> printer{ "\\omega" };
+		output << printer.latexify(expr) << std::endl;
+	} catch (std::exception& e) {
+		output << e.what() << std::endl;
+	}
+}
+
 int main(int argc, char **argv) {
 	std::cout << "This is Dirac matrices calculator by Sergii Kutnii" << std::endl;
 
@@ -28,13 +39,7 @@ int main(int argc, char **argv) {
 		if (input.empty())
 			continue;
 
-		try {
-			CanonicalExpr<double> expr = eval<double>(input);
-			ExprPrinter<double> printer{ "\\omega" };
-			std::cout << printer.latexify(expr) << std::endl;
-		} catch (std::exception& e) {
-			std::cout << e.what() << std::endl;
-		}
+		process<algebra::Rational>(input, std::cout);
 	}
 
 	return 0;

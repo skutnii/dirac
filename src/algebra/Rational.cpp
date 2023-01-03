@@ -15,7 +15,8 @@ namespace dirac {
 namespace algebra {
 
 void Rational::normalize() {
-	if ((_num == 0) || (_den == 0))
+	if ((absNum() == 0) || (_den == 0)
+			|| (absNum() == 1) || (_den == 1))
 		return;
 
 	removeFactor(2);
@@ -27,7 +28,7 @@ void Rational::normalize() {
 
 void Rational::removeFactor(unsigned long long int f) {
 	while (((absNum() % f) == 0) && ((_den % f) == 0)) {
-		_num = _num / f;
+		_num = _num / static_cast<long long int>(f);
 		_den = _den / f;
 	}
 }

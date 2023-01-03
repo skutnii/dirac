@@ -29,6 +29,7 @@ public:
 		: _num{ n }, _den{ d } { normalize(); }
 
 	Rational(long long int n) : Rational{ n, 1 } {}
+	Rational(int n) : Rational{ n, 1 } {}
 
 	bool finite() const { return (_den != 0); }
 
@@ -73,6 +74,31 @@ public:
 		res._num = -_num;
 		res._den = _den;
 		return res;
+	}
+
+	bool operator>(const Rational& other) const {
+		return (num() * static_cast<unsigned long long>(other.den())
+				> other.num() * static_cast<unsigned long long>(den()));
+	}
+
+	Rational& operator+=(const Rational& other) {
+		*this = *this + other;
+		return *this;
+	}
+
+	Rational& operator-=(const Rational& other) {
+		*this = *this - other;
+		return *this;
+	}
+
+	Rational& operator*=(const Rational& other) {
+		*this = *this * other;
+		return *this;
+	}
+
+	Rational& operator/=(const Rational& other) {
+		*this = *this / other;
+		return *this;
 	}
 
 private:

@@ -7,6 +7,7 @@
 
 #include "ExprPrinter.hpp"
 #include <string>
+#include <sstream>
 
 namespace dirac {
 
@@ -22,6 +23,16 @@ const std::string leftSquareBracket{ "\\left[" };
 const std::string rightSquareBracket{ "\\right]" };
 const std::string leftBracket{ "\\left(" };
 const std::string rightBracket{ "\\right)" };
+
+template<>
+std::string
+ExprPrinter<algebra::Rational>::latexify(const algebra::Rational& r) {
+	std::stringstream ss;
+	if (r.num() < 0)
+		ss << "-";
+	ss << "\\frac{" << r.absNum() << "}{" << r.den() << "}";
+	return ss.str();
+}
 
 } /* namespace symbolic */
 

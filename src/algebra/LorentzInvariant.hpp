@@ -126,6 +126,8 @@ struct TensorPolynomial : public Polynomial<Complex<Scalar>, Tensor> {
 			this->terms.emplace_back(c);
 	}
 
+	TensorPolynomial(const Scalar& s) : TensorPolynomial{ Coeff{ s, static_cast<Scalar>(0) } } {}
+
 	TensorPolynomial(const Tensor& t) : Base{} {
 		this->terms.emplace_back(one<Scalar>(), t);
 		indices = t.indices();

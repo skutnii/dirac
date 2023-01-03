@@ -17,17 +17,17 @@ using Complex = std::complex<Scalar>;
 
 template<typename Scalar>
 inline Complex<Scalar> one() {
-	return Complex<Scalar>{ 1, 0 };
+	return Complex<Scalar>{ static_cast<Scalar>(1), static_cast<Scalar>(0) };
 }
 
 template<typename Scalar>
 inline Complex<Scalar> I() {
-	return Complex<Scalar>{ 0, 1 };
+	return Complex<Scalar>{static_cast<Scalar>(0), static_cast<Scalar>(1) };
 }
 
 template<typename Scalar>
 inline Complex<Scalar> zero() {
-	return Complex<Scalar>{ 0, 0 };
+	return Complex<Scalar>{ static_cast<Scalar>(0), static_cast<Scalar>(0) };
 }
 
 }

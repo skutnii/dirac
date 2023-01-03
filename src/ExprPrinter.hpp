@@ -12,6 +12,7 @@
 #include <string>
 #include <unordered_map>
 #include <sstream>
+#include "algebra/Rational.hpp"
 
 namespace dirac {
 
@@ -29,6 +30,12 @@ public:
 	std::string latexify(const algebra::LI::Tensor& t) {
 		return latexify(t.id(), t.indices());
 	}
+
+	std::string latexify(const Scalar& s) {
+		return std::to_string(s);
+	}
+
+	std::string latexify(const Complex<Scalar>& c);
 
 	struct LatexTerm {
 		std::string sign;
@@ -105,37 +112,37 @@ ExprPrinter<Scalar>::latexify(const std::string& head, const TensorIndices& indi
 	return value;
 }
 
-template<typename Scalar>
-std::string to_string(const Scalar& c) {
-	return "";
-}
+template<>
+std::string
+ExprPrinter<algebra::Rational>::latexify(const algebra::Rational& r);
 
 template<typename Scalar>
-std::string to_string(const Complex<Scalar>& c) {
+std::string ExprPrinter<Scalar>::latexify(const Complex<Scalar>& c) {
 	bool hasReal = (c.real() != 0);
 	bool hasImag = (c.imag() != 0);
 
 	std::string value;
 	if (hasReal)
-		value += to_string(c.real());
+		value += latexify(c.real());
 
 	if (hasReal && (c.imag() > 0))
 		value += " + ";
 
 	if (hasImag)
-		value += to_string(c.imag()) + "I";
+		value += latexify(c.imag()) + "I";
 
 	return value;
 }
 
 template<typename Scalar>
 std::string sign(const Complex<Scalar>& c) {
-	if ((c.real() != 0) && (c.imag() != 0))
+	Scalar zero = static_cast<Scalar>(0);
+	if ((c.real() != zero) && (c.imag() != zero))
 		return "+";
-	else if (c.imag() == 0)
-		return (c.real() > 0) ? "+" : "";
+	else if (c.imag() == zero)
+		return (c.real() > zero) ? "+" : "";
 	else
-		return (c.imag() > 0) ? "+" : "";
+		return (c.imag() > zero) ? "+" : "";
 }
 
 template<typename Scalar>
@@ -165,7 +172,7 @@ ExprPrinter<Scalar>::latexify(const algebra::LI::TensorPolynomial<Scalar>& poly)
 			continue;
 		}
 
-		std::string coeff = to_string(term.coeff);
+		std::string coeff = latexify(term.coeff);
 		if ((term.coeff.real() != 0) && (term.coeff.imag() != 0))
 			coeff = leftBracket + coeff + rightBracket;
 
