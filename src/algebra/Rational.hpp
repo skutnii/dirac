@@ -80,16 +80,16 @@ public:
 		if (!finite() || !other.finite())
 			return false;
 
-		return (num() * static_cast<unsigned long long>(other.den())
-				> other.num() * static_cast<unsigned long long>(den()));
+		return (num() * static_cast<long long int>(other.den())
+				> other.num() * static_cast<long long int>(den()));
 	}
 
 	bool operator<(const Rational& other) const {
 		if (!finite() || !other.finite())
 			return false;
 
-		return (num() * static_cast<unsigned long long>(other.den())
-				< other.num() * static_cast<unsigned long long>(den()));
+		return (num() * static_cast<long long int>(other.den())
+				< other.num() * static_cast<long long int>(den()));
 	}
 
 	Rational& operator+=(const Rational& other) {
