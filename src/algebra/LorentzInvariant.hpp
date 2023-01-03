@@ -133,7 +133,7 @@ struct TensorPolynomial : public Polynomial<Complex<Scalar>, Tensor> {
 		indices = t.indices();
 	}
 
-	void canonicalize();
+	void canonicalize() override;
 
 	bool isZero() const {
 		if (this->terms.empty())
@@ -145,6 +145,11 @@ struct TensorPolynomial : public Polynomial<Complex<Scalar>, Tensor> {
 
 		return true;
 	}
+
+	void expandEpsilonPowers();
+	void contractMetric();
+	void contractKronecker();
+	void mergeTerms();
 };
 
 /**
@@ -215,22 +220,33 @@ inline TensorPolynomial<Scalar> operator-(const Tensor& t) {
 
 template<typename Scalar>
 void TensorPolynomial<Scalar>::canonicalize() {
+	expandEpsilonPowers();
+	contractMetric();
+	contractKronecker();
+	mergeTerms();
+}
+
+template<typename Scalar>
+void TensorPolynomial<Scalar>::expandEpsilonPowers() {
+	//TODO: implement!
+}
+
+template<typename Scalar>
+void TensorPolynomial<Scalar>::contractMetric() {
+	//TODO: implement!
+}
+
+template<typename Scalar>
+void TensorPolynomial<Scalar>::contractKronecker() {
+	//TODO: implement!
+}
+
+template<typename Scalar>
+void TensorPolynomial<Scalar>::mergeTerms() {
 	//TODO: implement!
 }
 
 } /*namespace LI*/
-
-template<>
-inline void canonicalize<LI::TensorPolynomial<double>,
-	Complex<double>, LI::Tensor>(LI::TensorPolynomial<double>& tp) {
-	tp.canonicalize();
-}
-
-template<>
-inline void canonicalize<LI::TensorPolynomial<Rational>,
-	Complex<Rational>, LI::Tensor>(LI::TensorPolynomial<Rational>& tp) {
-	tp.canonicalize();
-}
 
 }
 
