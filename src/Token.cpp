@@ -21,14 +21,5 @@ const Op Op::Subs{'_'}; // subscript _
 const Op Op::Super{'^'}; // superscript ^
 const Op Op::Splice {'&'}; // list concatenation
 
-std::ostream& operator<<(std::ostream &os, const Token &token) {
-	if (const Op* op = std::get_if<Op>(&token))
-		return (os << *op);
-
-	if (const Number* num = std::get_if<Number>(&token))
-		return (os << *num);
-
-	return (os << *std::get_if<std::string>(&token));
-}
 
 }

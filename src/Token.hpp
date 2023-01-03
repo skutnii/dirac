@@ -71,17 +71,19 @@ inline std::ostream& operator<<(std::ostream& os, const Op& op) {
 	return (os << op.str());
 }
 
-using Number = double;
+
 using Literal = std::string;
+
+template<typename Number>
 using Token = std::variant<Op, Number, Literal>;
 
-std::ostream& operator<<(std::ostream& os, const Token& token);
-
-inline bool isOp(const Token& token) {
+template<typename Number>
+inline bool isOp(const Token<Number>& token) {
 	return std::holds_alternative<Op>(token);
 }
 
-inline bool isValue(const Token& token) {
+template<typename Number>
+inline bool isValue(const Token<Number>& token) {
 	return !isOp(token);
 }
 

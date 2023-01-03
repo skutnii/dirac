@@ -28,7 +28,7 @@ template<typename Scalar>
 class Interpreter {
 public:
 
-	void exec(const Token& token);
+	void exec(const Token<Scalar>& token);
 	void exec(const Op& op);
 
 	template<std::input_iterator IToken, std::sentinel_for<IToken> IEnd>
@@ -53,12 +53,12 @@ private:
 };
 
 template<typename Scalar>
-void Interpreter<Scalar>::exec(const Token& token) {
+void Interpreter<Scalar>::exec(const Token<Scalar>& token) {
 	if (std::holds_alternative<Op>(token))
 		exec(std::get<Op>(token));
-	else if (std::holds_alternative<Number>(token)) {
+	else if (std::holds_alternative<Scalar>(token)) {
 		OpList<Scalar> value;
-		value.push_back(std::get<Number>(token));
+		value.push_back(std::get<Scalar>(token));
 		_stack.push_front(value);
 	} else if (std::holds_alternative<Literal>(token))
 		_stack.push_front(OpList<Scalar>{ std::get<Literal>(token) });

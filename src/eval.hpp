@@ -50,11 +50,11 @@ CanonicalExpr<Scalar> eval(const OpList<Scalar>& ops) {
  */
 template<typename Scalar>
 symbolic::CanonicalExpr<Scalar> eval(const std::string& expr) {
-	StringInput input{ expr };
-	Compiler compiler;
+	StringInput<Scalar> input{ expr };
+	Compiler<Scalar> compiler;
 	compiler.compile(input);
 
-	const Executable& opCode = compiler.opCode();
+	const Executable<Scalar>& opCode = compiler.opCode();
 	Interpreter<Scalar> interpreter;
 	interpreter.exec(opCode.begin(), opCode.end());
 
