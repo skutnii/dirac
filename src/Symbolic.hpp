@@ -51,15 +51,20 @@ struct Basis {
 };
 
 using Tensor = algebra::TensorBase<std::string, Basis, algebra::IndexId>;
-using Complex = algebra::Complex;
-using GammaPolynomial = algebra::Polynomial<Complex, Tensor>;
+
+template<typename Scalar>
+using Complex = algebra::Complex<Scalar>;
+
+template<typename Scalar>
+using GammaPolynomial = algebra::Polynomial<Complex<Scalar>, Tensor>;
 
 using TensorIndex = algebra::TensorIndex;
 using TensorIndices = algebra::TensorIndices;
 using IndexTag = algebra::IndexTag;
 
+template<typename Scalar>
 struct CanonicalExpr {
-	algebra::GammaVector coeffs;
+	algebra::GammaVector<Scalar> coeffs;
 
 	TensorIndex vectorIndex;
 	std::pair<TensorIndex, TensorIndex> tensorIndices;
@@ -82,45 +87,119 @@ struct CanonicalExpr {
 
 };
 
-GammaPolynomial toPolynomial(const Tensor& t);
+template<typename Scalar>
+GammaPolynomial<Scalar> toPolynomial(const Tensor& t) {
+	typename GammaPolynomial<Scalar>::Term term;
+	term.coeff = algebra::one<Scalar>();
+	term.factors.push_back(t);
 
-CanonicalExpr reduceGamma(const GammaPolynomial& p);
+	GammaPolynomial<Scalar> res;
+	res.terms.push_back(term);
+
+	return res;
+}
+
+template<typename Scalar>
+CanonicalExpr<Scalar> reduceGamma(const GammaPolynomial<Scalar>& p) {
+	using namespace algebra;
+
+	CanonicalExpr<Scalar> expr;
+
+	for (const typename GammaPolynomial<Scalar>::Term& term : p.terms) {
+		LI::TensorPolynomial<Scalar> coeff{ term.coeff };
+		coeff.terms[0].factors.reserve(term.factors.size());
+
+		//Build coefficient and the list of terms
+		int gammaCount = 0;
+		std::vector<GammaMatrix<Scalar>> factorsRepr;
+		factorsRepr.reserve(term.factors.size());
+		for (const Tensor& factor : term.factors) {
+			if (LI::Basis::allows(factor.id()))
+				coeff * LI::Tensor::create(factor.id(), factor.indices());
+			else {
+				if (!factor.complete())
+					throw std::runtime_error{ "Not enough indices for " + factor.id() };
+
+				int nextCount = gammaCount + 1;
+				const TensorIndices& indices = factor.indices();
+				if (Basis::gamma == factor.id())
+					factorsRepr.push_back(gamma<Scalar>(indices[0], gammaCount, nextCount));
+				else if (Basis::sigma == factor.id())
+					factorsRepr.push_back(sigma<Scalar>(indices[0], indices[1], gammaCount, nextCount));
+				else if (Basis::gamma5 == factor.id())
+					factorsRepr.push_back(gamma5<Scalar>(gammaCount, nextCount));
+				else
+					throw std::runtime_error{ "Unknown tensor name: " + factor.id() };
+
+				gammaCount = nextCount;
+			}
+		}
+
+		//Multiply terms from right to left
+		if (factorsRepr.empty())
+			expr.coeffs += GammaVector<Scalar>{ coeff,
+				LI::ZeroPoly<Scalar>(), LI::ZeroPoly<Scalar>(),
+				LI::ZeroPoly<Scalar>(), LI::ZeroPoly<Scalar>() };
+		else {
+			GammaVector<Scalar> termRepr = factorsRepr.back().col(0);
+			for (auto iFactor = factorsRepr.rbegin() + 1;
+					iFactor != factorsRepr.rend(); ++iFactor)
+				termRepr = (*iFactor) * termRepr;
+
+			expr.coeffs += coeff * termRepr;
+		}
+	}
+
+	return expr;
+}
 
 }
 
-inline symbolic::GammaPolynomial
-operator+(const symbolic::GammaPolynomial& p1,
-		const symbolic::GammaPolynomial& p2) {
-	return algebra::sum<symbolic::GammaPolynomial, algebra::Complex, symbolic::Tensor>(p1, p2);
+template<typename Scalar>
+inline symbolic::GammaPolynomial<Scalar>
+operator+(const symbolic::GammaPolynomial<Scalar>& p1,
+		const symbolic::GammaPolynomial<Scalar>& p2) {
+	return algebra::sum<symbolic::GammaPolynomial<Scalar>,
+			algebra::Complex<Scalar>, symbolic::Tensor>(p1, p2);
 }
 
-inline symbolic::GammaPolynomial
-operator-(const symbolic::GammaPolynomial& p1,
-		const symbolic::GammaPolynomial& p2) {
-	return algebra::diff<symbolic::GammaPolynomial, algebra::Complex, symbolic::Tensor>(p1, p2);
+template<typename Scalar>
+inline symbolic::GammaPolynomial<Scalar>
+operator-(const symbolic::GammaPolynomial<Scalar>& p1,
+		const symbolic::GammaPolynomial<Scalar>& p2) {
+	return algebra::diff<symbolic::GammaPolynomial<Scalar>,
+			algebra::Complex<Scalar>, symbolic::Tensor>(p1, p2);
 }
 
-inline symbolic::GammaPolynomial
-operator-(const symbolic::GammaPolynomial& p) {
-	return algebra::negate<symbolic::GammaPolynomial, algebra::Complex, symbolic::Tensor>(p);
+template<typename Scalar>
+inline symbolic::GammaPolynomial<Scalar>
+operator-(const symbolic::GammaPolynomial<Scalar>& p) {
+	return algebra::negate<symbolic::GammaPolynomial<Scalar>,
+			algebra::Complex<Scalar>, symbolic::Tensor>(p);
 }
 
-inline symbolic::GammaPolynomial
-operator*(const symbolic::GammaPolynomial& p1,
-		const symbolic::GammaPolynomial& p2) {
-	return algebra::prod<symbolic::GammaPolynomial, algebra::Complex, symbolic::Tensor>(p1, p2);
+template<typename Scalar>
+inline symbolic::GammaPolynomial<Scalar>
+operator*(const symbolic::GammaPolynomial<Scalar>& p1,
+		const symbolic::GammaPolynomial<Scalar>& p2) {
+	return algebra::prod<symbolic::GammaPolynomial<Scalar>,
+			algebra::Complex<Scalar>, symbolic::Tensor>(p1, p2);
 }
 
-inline symbolic::GammaPolynomial
-operator*(const algebra::Complex& c,
-		const symbolic::GammaPolynomial& p) {
-	return algebra::prod<symbolic::GammaPolynomial, algebra::Complex, symbolic::Tensor>(c, p);
+template<typename Scalar>
+inline symbolic::GammaPolynomial<Scalar>
+operator*(const algebra::Complex<Scalar>& c,
+		const symbolic::GammaPolynomial<Scalar>& p) {
+	return algebra::prod<symbolic::GammaPolynomial<Scalar>,
+			algebra::Complex<Scalar>, symbolic::Tensor>(c, p);
 }
 
-inline symbolic::GammaPolynomial
-operator*(const symbolic::GammaPolynomial& p,
-		const algebra::Complex& c) {
-	return algebra::prod<symbolic::GammaPolynomial, algebra::Complex, symbolic::Tensor>(p, c);
+template<typename Scalar>
+inline symbolic::GammaPolynomial<Scalar>
+operator*(const symbolic::GammaPolynomial<Scalar>& p,
+		const algebra::Complex<Scalar>& c) {
+	return algebra::prod<symbolic::GammaPolynomial<Scalar>,
+			algebra::Complex<Scalar>, symbolic::Tensor>(p, c);
 }
 
 }

@@ -13,10 +13,9 @@
 
 namespace dirac {
 
-class InputSequence {
-public:
-	virtual std::optional<Token> nextToken() = 0;
-	virtual ~InputSequence() = default;
+template<class T, typename Number>
+concept InputSequence = requires(T a) {
+	{ a.nextToken() } -> std::same_as<std::optional<Token<Number>>>;
 };
 
 }

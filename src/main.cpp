@@ -9,9 +9,23 @@
 
 #include "eval.hpp"
 #include "ExprPrinter.hpp"
+#include "utils.hpp"
 
 using namespace dirac;
 using namespace symbolic;
+
+template<typename Number>
+void process(const std::string& input, std::ostream& output) {
+	try {
+		CanonicalExpr<Number> expr = eval<Number>(input);
+		ExprPrinter<Number> printer{ "\\omega" };
+		output << printer.latexify(expr) << std::endl;
+	} catch (std::exception& e) {
+		output << e.what() << std::endl;
+	}
+}
+
+bool useFloat = false;
 
 int main(int argc, char **argv) {
 	std::cout << "This is Dirac matrices calculator by Sergii Kutnii" << std::endl;
@@ -22,19 +36,31 @@ int main(int argc, char **argv) {
 	while(true) {
 		std::cout << prompt;
 		std::getline(std::cin, input);
-		if (input == "quit")
+
+		std::vector<std::string> words = utils::get_words(input);
+		if ((words.size() == 1) && (words[0] == "quit"))
 			break;
 
-		if (input.empty())
+		if (words.empty())
 			continue;
 
-		try {
-			CanonicalExpr expr = eval(input);
-			ExprPrinter printer{ "\\omega" };
-			std::cout << printer.latexify(expr) << std::endl;
-		} catch (std::exception& e) {
-			std::cout << e.what() << std::endl;
+		if ((words.size() == 2) && (words[0] == "#use")) {
+			if (words[1] == "float")
+				useFloat = true;
+			else if (words[1] == "rational")
+				useFloat = false;
+			else
+				std::cout
+					<< "Invalid use-expression. Should be \"#use float\" or \"#use rational\""
+					<< std::endl;
+
+			continue;
 		}
+
+		if (useFloat)
+			process<double>(input, std::cout);
+		else
+			process<algebra::Rational>(input, std::cout);
 	}
 
 	return 0;
