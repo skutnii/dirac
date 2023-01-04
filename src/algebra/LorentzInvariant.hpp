@@ -372,10 +372,10 @@ TensorPolynomial<Scalar>::contractIndices(const typename TensorPolynomial<Scalar
 			TensorIndices tmpIndices;
 			tmpIndices.reserve(m.indices().size());
 			for (const TensorIndex& idx: m.indices()) {
-				if (idx.dual(i1)) {
+				if (idx.dual(i1) && !merged) {
 					tmpIndices.push_back(i2);
 					merged = true;
-				} else if (idx.dual(i2)) {
+				} else if (idx.dual(i2) && !merged) {
 					tmpIndices.push_back(i1);
 					merged = true;
 				} else {
@@ -405,10 +405,10 @@ TensorPolynomial<Scalar>::contractIndices(const typename TensorPolynomial<Scalar
 
 			const TensorIndices& indices = eps.indices();
 			for (size_t i = 0; i < indices.size(); ++i) {
-				if (indices[i].dual(i1)) {
+				if (indices[i].dual(i1) && !merged) {
 					eps.replaceIndex(i, i2);
 					merged = true;
-				} else if (indices[i].dual(i2)) {
+				} else if (indices[i].dual(i2) && !merged) {
 					eps.replaceIndex(i, i1);
 					merged = true;
 				}

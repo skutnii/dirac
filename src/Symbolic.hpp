@@ -115,7 +115,7 @@ CanonicalExpr<Scalar> reduceGamma(const GammaPolynomial<Scalar>& p) {
 		factorsRepr.reserve(term.factors.size());
 		for (const Tensor& factor : term.factors) {
 			if (LI::Basis::allows(factor.id()))
-				coeff * LI::Tensor::create(factor.id(), factor.indices());
+				coeff *= LI::Tensor::create(factor.id(), factor.indices());
 			else {
 				if (!factor.complete())
 					throw std::runtime_error{ "Not enough indices for " + factor.id() };
