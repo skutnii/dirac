@@ -17,6 +17,7 @@
 #include "Complex.hpp"
 #include "Rational.hpp"
 #include "Permutations.hpp"
+#include <algorithm>
 
 namespace dirac {
 
@@ -144,6 +145,8 @@ struct TensorPolynomial : public Polynomial<Complex<Scalar>, Tensor> {
 	}
 
 	static std::optional<Term> contractIndices(const Term& src);
+
+	static std::optional<Term> tryMerge(const Term& t1, const Term& t2);
 
 	void expandEpsilonPowers();
 	void contractIndices();
@@ -432,8 +435,86 @@ TensorPolynomial<Scalar>::contractIndices(const typename TensorPolynomial<Scalar
 }
 
 template<typename Scalar>
+std::optional<typename TensorPolynomial<Scalar>::Term>
+TensorPolynomial<Scalar>::tryMerge(const Term &t1, const Term &t2) {
+	if (t1.factors.size() != t2.factors.size())
+		return std::optional<Term>{};
+
+	bool even = true;
+	std::unordered_set<size_t> iMap1;
+	iMap1.reserve(t1.factors.size());
+	for (size_t i = 0; i < t1.factors.size(); ++i)
+		iMap1.insert(i);
+
+	std::unordered_set<size_t> iMap2;
+	iMap2.reserve(t2.factors.size());
+	for (size_t i = 0; i < t2.factors.size(); ++i)
+		iMap2.insert(i);
+
+	while (!iMap1.empty()) {
+		size_t iFirst = *iMap1.begin();
+		iMap1.erase(iFirst);
+
+		std::optional<size_t> iMatch;
+		for (size_t iSecond : iMap2) {
+			if (iMatch)
+				continue;
+
+			const Tensor& first = t1.factors[iFirst];
+			const Tensor& second = t2.factors[iSecond];
+
+			std::optional<Permutation> mapping = first.mappingTo(second);
+			if (mapping) {
+				iMatch = iSecond;
+
+				if (first.id() == Basis::epsilon) {
+					even = (even && mapping.value().isEven)
+							|| (!even && !mapping.value().isEven);
+				}
+			}
+		}
+
+		//If a non-matching factor is found, return empty optional
+		if (iMatch)
+			iMap2.erase(iMatch.value());
+		else
+			return std::optional<Term>{};
+	}
+
+	Term res{ t1 };
+	if (even)
+		res.coeff += t2.coeff;
+	else
+		res.coeff -= t2.coeff;
+
+	return res;
+}
+
+template<typename Scalar>
 void TensorPolynomial<Scalar>::mergeTerms() {
-	//TODO: implement!
+	typename TensorPolynomial<Scalar>::Terms tmpTerms;
+	tmpTerms.reserve(this->terms.size());
+
+	typename TensorPolynomial<Scalar>::Terms rest = this->terms;
+	while (!rest.empty()) {
+		Term first = rest[0];
+		rest.erase(rest.begin());
+
+		typename TensorPolynomial<Scalar>::Terms tmp;
+		tmp.reserve(rest.size());
+		for (Term& other: rest) {
+			std::optional<Term> merged = tryMerge(first, other);
+			if (merged)
+				first = merged.value();
+			else
+				tmp.push_back(other);
+		}
+
+		tmpTerms.push_back(first);
+		rest = tmp;
+	}
+
+	this->terms = tmpTerms;
 }
 
 } /*namespace LI*/
