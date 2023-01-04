@@ -35,7 +35,8 @@ template<Hashable IdType,
 class TensorBase {
 public:
 	using Self = TensorBase<IdType, Basis, IndexIdType>;
-	using Indices = std::vector<IndexBase<IndexIdType> >;
+	using Index = IndexBase<IndexIdType>;
+	using Indices = std::vector<Index>;
 
 	TensorBase() = delete;
 	TensorBase(const Self& other) = default;
@@ -110,6 +111,24 @@ public:
 			tmp.emplace_back(*it, isUpper);
 
 		return TensorBase{ id, tmp };
+	}
+
+	bool operator==(const TensorBase<IdType, Basis, IndexIdType>& other) const {
+		if (_id != other._id)
+			return false;
+
+		if (_indices.size() != other._indices.size())
+			return false;
+
+		for (size_t i = 0; i < _indices.size(); ++i)
+			if (_indices[i] != other._indices[i])
+				return false;
+
+		return true;
+	}
+
+	void replaceIndex(size_t pos, const Index& repl) {
+		_indices.at(pos) = repl;
 	}
 
 private:
