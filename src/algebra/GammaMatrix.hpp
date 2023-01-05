@@ -64,9 +64,9 @@ GammaMatrix<Scalar> gamma(const TensorIndex& mu, int leftTag, int rightTag)  {
 	res(1, 0) = eta<Scalar>(mu, lambda);
 	res(1, 2) = I<Scalar>() * (eta<Scalar>(mu, nu1) * eta<Scalar>(nu2, lambda)
 								- eta<Scalar>(mu, nu2) * eta<Scalar>(nu1, lambda));
-	res(2, 1) = -(I<Scalar>() / static_cast<Scalar>(2)) * (eta<Scalar>(mu, lambda1) * eta<Scalar>(nu, lambda2) -
+	res(2, 1) = -(I<Scalar>() / Scalar{ 2 }) * (eta<Scalar>(mu, lambda1) * eta<Scalar>(nu, lambda2) -
 			eta<Scalar>(mu, lambda2) * eta<Scalar>(nu, lambda1));
-	res(2, 3) = (one<Scalar>() / static_cast<Scalar>(2)) * epsilon<Scalar>(mu, nu, lambda1, lambda2);
+	res(2, 3) = (one<Scalar>() / Scalar{ 2 }) * epsilon<Scalar>(mu, nu, lambda1, lambda2);
 	res(3, 2) = -epsilon<Scalar>(mu, nu1, nu2, lambda);
 	res(3, 4) = -eta<Scalar>(mu, lambda);
 	res(4, 3) = -eta<Scalar>(mu, nu);
@@ -89,7 +89,7 @@ GammaMatrix<Scalar> gamma5(int leftTag, int rightTag) {
 	GammaMatrix<Scalar> res;
 	res(0, 4) = one<Scalar>();
 	res(1, 3) = eta<Scalar>(nu, lambda);
-	res(2, 2) = - (I<Scalar>() / static_cast<Scalar>(2)) * epsilon<Scalar>(nu1, nu2, lambda1, lambda2);
+	res(2, 2) = - (I<Scalar>() / Scalar{ 2 }) * epsilon<Scalar>(nu1, nu2, lambda1, lambda2);
 	res(3, 1) = eta<Scalar>(nu, lambda);
 	res(4, 0) = one<Scalar>();
 
@@ -117,25 +117,26 @@ GammaMatrix<Scalar> sigma(const TensorIndex& mu1,
 	res(1, 1) = I<Scalar>() * (eta<Scalar>(mu1, lambda) * eta<Scalar>(mu2, nu)
 			- eta<Scalar>(mu2, lambda) * eta<Scalar>(mu1, nu));
 	res(1, 3) = -epsilon<Scalar>(mu1, mu2, nu, lambda);
-	res(2, 0) = (one<Scalar>() / static_cast<Scalar>(2)) *
+
+	res(2, 0) = (one<Scalar>() / Scalar{ 2 }) *
 			(eta<Scalar>(mu1, lambda1) * eta<Scalar>(mu2, lambda2)
 					- eta<Scalar>(mu2, lambda1) * eta<Scalar>(mu1, lambda2));
 
-	res(2, 2) = (I<Scalar>() / static_cast<Scalar>(2)) * (
+	res(2, 2) = (I<Scalar>() / Scalar{ 2 }) * (
 					eta<Scalar>(mu1, lambda1) * eta<Scalar>(nu2, lambda2) * eta<Scalar>(mu2, nu1)
 					- eta<Scalar>(mu2, lambda1) * eta<Scalar>(nu2, lambda2) * eta<Scalar>(mu1, nu1)
 					- eta<Scalar>(mu1, lambda1) * eta<Scalar>(nu1, lambda2) * eta<Scalar>(mu2, nu2)
 					+ eta<Scalar>(mu2, lambda1) * eta<Scalar>(nu1, lambda2) * eta<Scalar>(mu1, nu2)
-					- eta<Scalar>(mu1, lambda2) * eta<Scalar>(nu2, lambda1) * eta<Scalar>(mu2, nu1)
-					+ eta<Scalar>(mu2, lambda2) * eta<Scalar>(nu2, lambda1) * eta<Scalar>(mu1, nu1)
-					+ eta<Scalar>(mu1, lambda2) * eta<Scalar>(nu1, lambda1) * eta<Scalar>(mu2, nu2)
-					- eta<Scalar>(mu2, lambda2) * eta<Scalar>(nu1, lambda1) * eta<Scalar>(mu2, nu2));
+					+ eta<Scalar>(mu1, nu1) * eta<Scalar>(mu2, lambda2) * eta<Scalar>(nu2, lambda1)
+					- eta<Scalar>(mu1, nu2) * eta<Scalar>(mu2, lambda2) * eta<Scalar>(nu1, lambda1)
+					- eta<Scalar>(mu2, nu1) * eta<Scalar>(mu1, lambda2) * eta<Scalar>(nu2, lambda1)
+					+ eta<Scalar>(mu2, nu2) * eta<Scalar>(mu1, lambda2) * eta<Scalar>(nu1, lambda1));
 
-	res(2, 4) = - (I<Scalar>() / static_cast<Scalar>(2)) * epsilon<Scalar>(mu1, mu2, lambda1, lambda2);
-	res(3, 1) = - (one<Scalar>() / static_cast<Scalar>(2)) * epsilon<Scalar>(mu1, mu2, nu, lambda);
+	res(2, 4) = - (I<Scalar>() / Scalar{ 2 }) * epsilon<Scalar>(mu1, mu2, lambda1, lambda2);
+	res(3, 1) = - epsilon<Scalar>(mu1, mu2, nu, lambda);
 	res(3, 3) = I<Scalar>() * (eta<Scalar>(mu1, nu) * eta<Scalar>(mu2, lambda)
 					- eta<Scalar>(mu2, nu) * eta<Scalar>(mu1, lambda));
-	res(4, 2) = - (I<Scalar>() / static_cast<Scalar>(2)) * epsilon<Scalar>(mu1, mu2, nu1, nu2);
+	res(4, 2) = - I<Scalar>() * epsilon<Scalar>(mu1, mu2, nu1, nu2);
 
 	return res;
 }

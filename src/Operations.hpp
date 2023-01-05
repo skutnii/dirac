@@ -174,6 +174,12 @@ inline OpList<Scalar> prod(const OpList<Scalar>& first, const OpList<Scalar>& se
 
 template<typename Scalar>
 Operand<Scalar> div(const Operand<Scalar>& op1, const Operand<Scalar>& op2) {
+	if (std::holds_alternative<Literal>(op1))
+		return div<Scalar>(resolve<Scalar>(std::get<Literal>(op1)), op2);
+
+	if (std::holds_alternative<Literal>(op2))
+		return div<Scalar>(op1, resolve<Scalar>(std::get<Literal>(op2)));
+
 	if (!std::holds_alternative<Complex<Scalar>>(op2))
 		throw std::runtime_error{ "Can only divide by a number" };
 

@@ -173,6 +173,9 @@ void Compiler<Number>::pushOp(const Op &op) {
 	 * Process opening bracket
 	 */
 	if (op == Op::LBrace) {
+		if ((_state == Value) || (_state == RBrace))
+			pushOp(Op::Splice);
+
 		doPush(op);
 		return;
 	}

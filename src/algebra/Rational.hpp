@@ -31,6 +31,15 @@ public:
 	Rational(long long int n) : Rational{ n, 1 } {}
 	Rational(int n) : Rational{ n, 1 } {}
 
+	Rational(const Rational& other) : _num{ other._num }, _den{ other._den } {};
+	Rational(Rational&& other) : _num{ other._num }, _den{ other._den } {};
+
+	Rational& operator=(const Rational& other) {
+		_num = other._num;
+		_den = other._den;
+		return *this;
+	};
+
 	bool finite() const { return (_den != 0); }
 
 	bool operator==(const Rational& other) const {
@@ -93,22 +102,40 @@ public:
 	}
 
 	Rational& operator+=(const Rational& other) {
-		*this = *this + other;
+		if (other._num != 0) {
+			_num = _num * static_cast<long long int>(other._den)
+				+ other._num * static_cast<long long int>(_den);
+			_den = _den * other._den;
+			normalize();
+		}
+
 		return *this;
 	}
 
 	Rational& operator-=(const Rational& other) {
-		*this = *this - other;
+		if (other._num != 0) {
+			_num = _num * static_cast<long long int>(other._den)
+						- other._num * static_cast<long long int>(_den);
+			_den = _den * other._den;
+			normalize();
+		}
+
 		return *this;
 	}
 
 	Rational& operator*=(const Rational& other) {
-		*this = *this * other;
+		_num = _num * other._num;
+		_den = _den * other._den;
+		normalize();
+
 		return *this;
 	}
 
 	Rational& operator/=(const Rational& other) {
-		*this = *this / other;
+		_num = _num * static_cast<long long int>(other._den);
+		_den = _den * static_cast<unsigned long long int>(other._num);
+		normalize();
+
 		return *this;
 	}
 
