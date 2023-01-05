@@ -35,7 +35,8 @@ void forPermutations(unsigned int n, PermutationWalker walker) {
 				else
 					combo.map.push_back(l + 1);
 
-			combo.isEven = rest.isEven && ((k % 2) == 0);
+			bool kEven = (k % 2) == 0;
+			combo.isEven = (rest.isEven && kEven) || (!rest.isEven && !kEven);
 			walker(combo);
 		});
 }
