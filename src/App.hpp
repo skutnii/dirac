@@ -139,7 +139,11 @@ App::compute(const std::string& expr) const {
 	if (stack.size() != 1)
 		throw std::runtime_error{ "Inconsistent expression" };
 
-	return eval<Scalar>(stack.front());
+	CanonicalExpr<Scalar> res = eval<Scalar>(stack.front());
+	if (_applySymmetry)
+		res.applySymmetry();
+
+	return res;
 }
 
 //----------------------------------------------------------------------

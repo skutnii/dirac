@@ -65,36 +65,45 @@ struct TensorPolynomial : public Polynomial<Complex<Scalar>, Tensor> {
 
 	TensorPolynomial<Scalar>
 	operator+(const TensorPolynomial<Scalar>& other) const {
-		return sum<TensorPolynomial<Scalar>, Coeff, Tensor>(*this, other);
+		return sum<TensorPolynomial<Scalar>,
+					Coeff, Tensor>(*this, other);
 	}
 
 	TensorPolynomial<Scalar>
 	operator-(const TensorPolynomial<Scalar>& other) const {
-		return diff<TensorPolynomial<Scalar>, Coeff, Tensor>(*this, other);
+		return diff<TensorPolynomial<Scalar>,
+					Coeff, Tensor>(*this, other);
 	}
 
 	TensorPolynomial<Scalar>
 	operator*(const TensorPolynomial<Scalar>& other) const {
-		return prod<TensorPolynomial<Scalar>, Coeff, Tensor>(*this, other);
+		return prod<TensorPolynomial<Scalar>,
+					Coeff, Tensor>(*this, other);
 	}
 
 	TensorPolynomial<Scalar> operator*(const Coeff& c) const {
-		return prod<TensorPolynomial<Scalar>, Coeff, Tensor>(*this, c);
+		return prod<TensorPolynomial<Scalar>,
+					Coeff, Tensor>(*this, c);
 	}
 
 	TensorPolynomial<Scalar> operator-() const {
 		return negate<TensorPolynomial<Scalar>, Coeff, Tensor>(*this);
 	}
 
-	TensorPolynomial<Scalar>& operator+=(const TensorPolynomial<Scalar>& other) {
-		return add<TensorPolynomial<Scalar>, Coeff, Tensor>(*this, other);
+	TensorPolynomial<Scalar>& operator+=(
+			const TensorPolynomial<Scalar>& other) {
+		return add<TensorPolynomial<Scalar>,
+					Coeff, Tensor>(*this, other);
 	}
 
-	TensorPolynomial<Scalar>& operator-=(const TensorPolynomial<Scalar>& other) {
-		return sub<TensorPolynomial<Scalar>, Coeff, Tensor>(*this, other);
+	TensorPolynomial<Scalar>& operator-=(
+			const TensorPolynomial<Scalar>& other) {
+		return sub<TensorPolynomial<Scalar>,
+					Coeff, Tensor>(*this, other);
 	}
 
-	TensorPolynomial<Scalar>& operator*=(const TensorPolynomial<Scalar>& other) {
+	TensorPolynomial<Scalar>& operator*=(
+			const TensorPolynomial<Scalar>& other) {
 		this->terms = (*this * other).terms;
 		return *this;
 	}
@@ -116,7 +125,9 @@ struct TensorPolynomial : public Polynomial<Complex<Scalar>, Tensor> {
 	TensorPolynomial() = default;
 	TensorPolynomial(const TensorPolynomial<Scalar>& other) = default;
 	TensorPolynomial(TensorPolynomial<Scalar>&& other) = default;
-	TensorPolynomial& operator=(const TensorPolynomial<Scalar>& other) = default;
+
+	TensorPolynomial&
+	operator=(const TensorPolynomial<Scalar>& other) = default;
 
 	TensorPolynomial(const Coeff& c)
 		: Base{} {
@@ -124,7 +135,8 @@ struct TensorPolynomial : public Polynomial<Complex<Scalar>, Tensor> {
 			this->terms.emplace_back(c);
 	}
 
-	TensorPolynomial(const Scalar& s) : TensorPolynomial{ Coeff{ s, static_cast<Scalar>(0) } } {}
+	TensorPolynomial(const Scalar& s) :
+		TensorPolynomial{ Coeff{ s, static_cast<Scalar>(0) } } {}
 
 	TensorPolynomial(const Tensor& t) : Base{} {
 		this->terms.emplace_back(one<Scalar>(), t);
@@ -150,7 +162,12 @@ struct TensorPolynomial : public Polynomial<Complex<Scalar>, Tensor> {
 
 	void expandEpsilonPowers();
 	void contractIndices();
-	void mergeTerms();
+
+	using Merger =
+			std::function<
+				std::optional<Term> (const Term& t1, const Term& t2)>;
+
+	void mergeTerms(Merger merger = tryMerge);
 };
 
 } /* namespace LI */
@@ -166,7 +183,8 @@ struct hash<dirac::algebra::LI::Tensor> {
 	size_t operator()(const dirac::algebra::LI::Tensor& t) const {
 		size_t value = std::hash<std::string>{}(t.id());
 		for (const auto& idx: t.indices())
-			value = value ^ std::hash<dirac::algebra::TensorIndex>{}(idx);
+			value = value
+					^ std::hash<dirac::algebra::TensorIndex>{}(idx);
 
 		return value;
 	}
@@ -185,9 +203,10 @@ namespace LI {
  * For a lower and an upper index, returns Kronecker delta.
  */
 template<typename Scalar>
-TensorPolynomial<Scalar> eta(const TensorIndex& mu, const TensorIndex& nu)  {
+TensorPolynomial<Scalar>
+eta(const TensorIndex& mu, const TensorIndex& nu)  {
 	std::string id = (mu.isUpper == nu.isUpper) ?
-			Basis::eta : Basis::delta;
+							Basis::eta : Basis::delta;
 	return Tensor::create(id, Tensor::Indices{ mu, nu });
 }
 
@@ -209,19 +228,23 @@ inline TensorPolynomial<Scalar> ZeroPoly() {
 }
 
 template<typename Scalar>
-inline TensorPolynomial<Scalar> operator*(const Complex<Scalar>& c, const TensorPolynomial<Scalar>& p) {
-	return prod<TensorPolynomial<Scalar>, Complex<Scalar>, Tensor>(c, p);
+inline TensorPolynomial<Scalar>
+operator*(const Complex<Scalar>& c, const TensorPolynomial<Scalar>& p) {
+	return prod<TensorPolynomial<Scalar>,
+				Complex<Scalar>, Tensor>(c, p);
 }
 
 template<typename Scalar>
-inline TensorPolynomial<Scalar>& operator*=(const Tensor& t, TensorPolynomial<Scalar>& p) {
+inline TensorPolynomial<Scalar>&
+operator*=(const Tensor& t, TensorPolynomial<Scalar>& p) {
 	for (typename TensorPolynomial<Scalar>::Term& term : p.terms)
 		term.factors.insert(term.factors.begin(), t);
 	return p;
 }
 
 template<typename Scalar>
-inline TensorPolynomial<Scalar>& operator*=(const Complex<Scalar>& c, TensorPolynomial<Scalar>& p) {
+inline TensorPolynomial<Scalar>&
+operator*=(const Complex<Scalar>& c, TensorPolynomial<Scalar>& p) {
 	for (typename TensorPolynomial<Scalar>::Term& term : p.terms)
 		term.coeff = c * term.coeff;
 	return p;
@@ -278,15 +301,24 @@ void TensorPolynomial<Scalar>::expandEpsilonPowers() {
 				else {
 					Tensor& cached = epsCache.value();
 					if (!factor.complete() || !cached.complete())
-						throw std::runtime_error{ "Levi-Civita symbol must have four indices" };
+						throw std::runtime_error{
+								"Levi-Civita symbol "
+								"must have four indices" };
 
 					TensorPolynomial<Scalar> expansion;
 					forPermutations(4, [&](const Permutation& perm) {
-						TensorPolynomial<Scalar> expTerm{ one<Scalar>() };
-						const TensorIndices& factorIndices = factor.indices();
-						const TensorIndices& cachedIndices = cached.indices();
+						TensorPolynomial<Scalar>
+						expTerm{ one<Scalar>() };
+
+						const TensorIndices&
+						factorIndices = factor.indices();
+
+						const TensorIndices&
+						cachedIndices = cached.indices();
+
 						for (unsigned int i = 0; i < 4; ++i)
-							expTerm *= eta<Scalar>(cachedIndices[i], factorIndices[perm.map[i]]);
+							expTerm *= eta<Scalar>(cachedIndices[i],
+											factorIndices[perm.map[i]]);
 
 						if (perm.isEven)
 							expansion -= expTerm;
@@ -303,7 +335,8 @@ void TensorPolynomial<Scalar>::expandEpsilonPowers() {
 		if (epsCache)
 			tmp *= epsCache.value();
 
-		tmpTerms.insert(tmpTerms.end(), tmp.terms.begin(), tmp.terms.end());
+		tmpTerms.insert(tmpTerms.end(),
+				tmp.terms.begin(), tmp.terms.end());
 	}
 
 	this->terms = tmpTerms;
@@ -325,7 +358,8 @@ void TensorPolynomial<Scalar>::contractIndices() {
 
 template<typename Scalar>
 std::optional<typename TensorPolynomial<Scalar>::Term>
-TensorPolynomial<Scalar>::contractIndices(const typename TensorPolynomial<Scalar>::Term& src) {
+TensorPolynomial<Scalar>::contractIndices(
+		const typename TensorPolynomial<Scalar>::Term& src) {
 	if (src.coeff == zero<Scalar>())
 		return std::optional<Term>{};
 
@@ -343,10 +377,12 @@ TensorPolynomial<Scalar>::contractIndices(const typename TensorPolynomial<Scalar
 	for (const Tensor& factor : src.factors) {
 		if (factor.id() ==  Basis::epsilon)
 			epsilons.push_back(factor);
-		else if ((factor.id() == Basis::eta) || (factor.id() == Basis::delta))
+		else if ((factor.id() == Basis::eta)
+				|| (factor.id() == Basis::delta))
 			metrics.push_back(factor);
 		else
-			throw std::runtime_error{ "Invalid Lorentz-invariant tensor id" };
+			throw std::runtime_error{
+				"Invalid Lorentz-invariant tensor id" };
 	}
 
 	while (!metrics.empty()) {
@@ -394,7 +430,8 @@ TensorPolynomial<Scalar>::contractIndices(const typename TensorPolynomial<Scalar
 				else
 					hasLower = true;
 
-			std::string tensorId = (hasUpper && hasLower) ? Basis::delta : Basis::eta;
+			std::string tensorId = (hasUpper && hasLower)
+										? Basis::delta : Basis::eta;
 			m = Tensor::create(tensorId, tmpIndices);
 		}
 
@@ -425,7 +462,8 @@ TensorPolynomial<Scalar>::contractIndices(const typename TensorPolynomial<Scalar
 		//Check for same indices in Livi-Civita symbol
 		for (size_t i = 0; i < indices.size(); ++i)
 			for (size_t j = i + 1; j < indices.size(); ++j)
-				if (indices[i].dual(indices[j]) || (indices[i] == indices[j]))
+				if (indices[i].dual(indices[j])
+						|| (indices[i] == indices[j]))
 					return std::optional<Term>{};
 
 		res.factors.push_back(eps);
@@ -463,7 +501,8 @@ TensorPolynomial<Scalar>::tryMerge(const Term &t1, const Term &t2) {
 			const Tensor& first = t1.factors[iFirst];
 			const Tensor& second = t2.factors[iSecond];
 
-			std::optional<Permutation> mapping = first.mappingTo(second);
+			std::optional<Permutation>
+			mapping = first.mappingTo(second);
 			if (mapping) {
 				iMatch = iSecond;
 
@@ -491,7 +530,7 @@ TensorPolynomial<Scalar>::tryMerge(const Term &t1, const Term &t2) {
 }
 
 template<typename Scalar>
-void TensorPolynomial<Scalar>::mergeTerms() {
+void TensorPolynomial<Scalar>::mergeTerms(Merger merger) {
 	typename TensorPolynomial<Scalar>::Terms tmpTerms;
 	tmpTerms.reserve(this->terms.size());
 
@@ -503,7 +542,7 @@ void TensorPolynomial<Scalar>::mergeTerms() {
 		typename TensorPolynomial<Scalar>::Terms tmp;
 		tmp.reserve(rest.size());
 		for (Term& other: rest) {
-			std::optional<Term> merged = tryMerge(first, other);
+			std::optional<Term> merged = merger(first, other);
 			if (merged)
 				first = merged.value();
 			else

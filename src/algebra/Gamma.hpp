@@ -32,13 +32,13 @@ struct GammaBasis {
 	static const NameSet Elements;
 
 	inline static bool allows(const std::string& id) {
-		return (algebra::LI::Basis::allows(id)
+		return (LI::Basis::allows(id)
 				|| (Elements.find(id) != Elements.end()));
 	}
 
 	inline static size_t maxIndexCount(const std::string& id) {
-		if (algebra::LI::Basis::allows(id))
-			return algebra::LI::Basis::maxIndexCount(id);
+		if (LI::Basis::allows(id))
+			return LI::Basis::maxIndexCount(id);
 
 		if (id == sigma)
 			return 2;
@@ -82,12 +82,17 @@ struct CanonicalExpr {
 			TensorIndex{ IndexTag{ 0, 0 }, true } }
 	{};
 
+	/**
+	 * Merge the terms in the coefficient at \sigma,
+	 * taking antisymmetry into account.
+	 */
+	void applySymmetry();
 };
 
 template<typename Scalar>
 GammaPolynomial<Scalar> toPolynomial(const GammaTensor& t) {
 	typename GammaPolynomial<Scalar>::Term term;
-	term.coeff = algebra::one<Scalar>();
+	term.coeff = one<Scalar>();
 	term.factors.push_back(t);
 
 	GammaPolynomial<Scalar> res;
@@ -164,53 +169,78 @@ template<typename Scalar>
 inline GammaPolynomial<Scalar>
 operator+(const GammaPolynomial<Scalar>& p1,
 		const GammaPolynomial<Scalar>& p2) {
-	return algebra::sum<GammaPolynomial<Scalar>,
-			algebra::Complex<Scalar>, GammaTensor>(p1, p2);
+	return sum<GammaPolynomial<Scalar>,
+			Complex<Scalar>, GammaTensor>(p1, p2);
 }
 
 template<typename Scalar>
 inline GammaPolynomial<Scalar>
 operator-(const GammaPolynomial<Scalar>& p1,
 		const GammaPolynomial<Scalar>& p2) {
-	return algebra::diff<GammaPolynomial<Scalar>,
-			algebra::Complex<Scalar>, GammaTensor>(p1, p2);
+	return diff<GammaPolynomial<Scalar>,
+			Complex<Scalar>, GammaTensor>(p1, p2);
 }
 
 template<typename Scalar>
 inline GammaPolynomial<Scalar>
 operator-(const GammaPolynomial<Scalar>& p) {
-	return algebra::negate<GammaPolynomial<Scalar>,
-			algebra::Complex<Scalar>, GammaTensor>(p);
+	return negate<GammaPolynomial<Scalar>,
+			Complex<Scalar>, GammaTensor>(p);
 }
 
 template<typename Scalar>
 inline GammaPolynomial<Scalar>
 operator*(const GammaPolynomial<Scalar>& p1,
 		const GammaPolynomial<Scalar>& p2) {
-	return algebra::prod<GammaPolynomial<Scalar>,
-			algebra::Complex<Scalar>, GammaTensor>(p1, p2);
+	return prod<GammaPolynomial<Scalar>,
+			Complex<Scalar>, GammaTensor>(p1, p2);
 }
 
 template<typename Scalar>
 inline GammaPolynomial<Scalar>
-operator*(const algebra::Complex<Scalar>& c,
+operator*(const Complex<Scalar>& c,
 		const GammaPolynomial<Scalar>& p) {
-	return algebra::prod<GammaPolynomial<Scalar>,
-			algebra::Complex<Scalar>, GammaTensor>(c, p);
+	return prod<GammaPolynomial<Scalar>,
+			Complex<Scalar>, GammaTensor>(c, p);
 }
 
 template<typename Scalar>
 inline GammaPolynomial<Scalar>
 operator*(const GammaPolynomial<Scalar>& p,
-		const algebra::Complex<Scalar>& c) {
-	return algebra::prod<GammaPolynomial<Scalar>,
-			algebra::Complex<Scalar>, GammaTensor>(p, c);
+		const Complex<Scalar>& c) {
+	return prod<GammaPolynomial<Scalar>,
+			Complex<Scalar>, GammaTensor>(p, c);
+}
+
+template<typename Scalar>
+void CanonicalExpr<Scalar>::applySymmetry() {
+	using Term = typename LI::TensorPolynomial<Scalar>::Term;
+	coeffs(2).mergeTerms(
+			[&](const Term& t1, const Term& t2) -> std::optional<Term> {
+				Term swapped{ t2 };
+				swapped.coeff = -swapped.coeff;
+
+				//Swap indices
+				TensorIndex i1{ this->tensorIndices.first.id,
+								!this->tensorIndices.first.isUpper };
+				TensorIndex i2{ this->tensorIndices.second.id,
+								!this->tensorIndices.second.isUpper };
+				for (LI::Tensor& factor : swapped.factors) {
+					const TensorIndices& indices = factor.indices();
+					for (size_t i = 0; i < indices.size(); ++i)
+						if (indices[i] == i1)
+							factor.replaceIndex(i, i2);
+						else if (indices[i] == i2)
+							factor.replaceIndex(i, i1);
+				}
+
+				return LI::TensorPolynomial<Scalar>::tryMerge(
+														t1, swapped);
+			});
 }
 
 } /* namespace algebra */
 
 } /* namespace dirac */
-
-
 
 #endif /* SRC_SYMBOLIC_HPP_ */
