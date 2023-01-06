@@ -8,11 +8,14 @@
 #ifndef SRC_EXPRPRINTER_HPP_
 #define SRC_EXPRPRINTER_HPP_
 
-#include "Symbolic.hpp"
 #include <string>
 #include <unordered_map>
 #include <sstream>
+
+#include "algebra/Gamma.hpp"
 #include "algebra/Rational.hpp"
+
+#include "Operations.hpp"
 
 namespace dirac {
 
@@ -25,7 +28,8 @@ public:
 		: _dummyIndexName{ dummyIndexName } {}
 
 	std::string latexify(const CanonicalExpr<Scalar>& expr);
-	std::string latexify(const std::string& tensorHead, const TensorIndices& indices);
+	std::string latexify(const std::string& tensorHead,
+							const TensorIndices& indices);
 
 	std::string latexify(const algebra::LI::Tensor& t) {
 		return latexify(t.id(), t.indices());
@@ -62,7 +66,8 @@ public:
 		return latex.str();
 	}
 
-	LatexTerms latexify(const algebra::LI::TensorPolynomial<Scalar>& poly);
+	LatexTerms
+	latexify(const algebra::LI::TensorPolynomial<Scalar>& poly);
 
 	std::string mapIndexId(const algebra::IndexId& aId);
 private:
@@ -81,11 +86,17 @@ extern const std::string rightBracket;
 
 template<typename Scalar>
 std::string
-ExprPrinter<Scalar>::latexify(const std::string& head, const TensorIndices& indices) {
-	using Fragment = std::pair<bool, std::string>; //first: upper or lower flag; second: body
+ExprPrinter<Scalar>::latexify(const std::string& head,
+								const TensorIndices& indices) {
+	using namespace algebra;
+	//first: upper or lower flag; second: body
+	using Fragment = std::pair<bool, std::string>;
 	std::vector<Fragment> frags;
 
-	//Concatenate adjacent subscript or superscript indices into fragments
+	/*
+	 Concatenate adjacent subscript
+		or superscript indices into fragments
+	*/
 	for (const TensorIndex& idx : indices) {
 		if (frags.empty()
 				|| (frags.back().first && !idx.isUpper)
@@ -105,7 +116,8 @@ ExprPrinter<Scalar>::latexify(const std::string& head, const TensorIndices& indi
 		else
 			value = leftBrace + value + rightBrace;
 
-		value += (frag.first ? hat : subs) + leftBrace + frag.second + rightBrace;
+		value += (frag.first ? hat : subs)
+				+ leftBrace + frag.second + rightBrace;
 	}
 
 
@@ -136,7 +148,8 @@ std::string ExprPrinter<Scalar>::latexify(const Complex<Scalar>& c) {
 
 template<>
 std::string
-ExprPrinter<algebra::Rational>::latexify(const Complex<algebra::Rational>& c);
+ExprPrinter<algebra::Rational>::latexify(
+		const Complex<algebra::Rational>& c);
 
 template<typename Scalar>
 std::string sign(const Complex<Scalar>& c) {
@@ -151,13 +164,15 @@ std::string sign(const Complex<Scalar>& c) {
 
 template<typename Scalar>
 typename ExprPrinter<Scalar>::LatexTerms
-ExprPrinter<Scalar>::latexify(const algebra::LI::TensorPolynomial<Scalar>& poly) {
+ExprPrinter<Scalar>::latexify(
+		const algebra::LI::TensorPolynomial<Scalar>& poly) {
 	using namespace algebra;
 
 	LatexTerms latex;
 	latex.reserve(poly.terms.size());
 
-	for (const typename LI::TensorPolynomial<Scalar>::Term& term : poly.terms) {
+	for (const typename LI::TensorPolynomial<Scalar>::Term&
+											term : poly.terms) {
 		if (term.coeff == zero<Scalar>())
 			continue;
 
@@ -187,7 +202,8 @@ ExprPrinter<Scalar>::latexify(const algebra::LI::TensorPolynomial<Scalar>& poly)
 }
 
 template<typename Scalar>
-std::string ExprPrinter<Scalar>::mapIndexId(const algebra::IndexId& aId) {
+std::string ExprPrinter<Scalar>::mapIndexId(
+									const algebra::IndexId& aId) {
 	using namespace algebra;
 
 	if (std::holds_alternative<std::string>(aId))
@@ -222,7 +238,8 @@ ExprPrinter<Scalar>::latexify(const CanonicalExpr<Scalar>& expr) {
 			continue;
 
 		if (latexCoeffs[i].size() > 1) {
-			terms[i].body = leftSquareBracket + join(latexCoeffs[i]) + rightSquareBracket;
+			terms[i].body = leftSquareBracket
+					+ join(latexCoeffs[i]) + rightSquareBracket;
 			terms[i].sign = "+";
 		} else {
 			terms[i] = latexCoeffs[i][0];
@@ -230,15 +247,18 @@ ExprPrinter<Scalar>::latexify(const CanonicalExpr<Scalar>& expr) {
 	}
 
 	if (!latexCoeffs[1].empty())
-		terms[1].body += latexify(std::string{ "\\gamma" }, { expr.vectorIndex });
+		terms[1].body += latexify(std::string{ "\\gamma" },
+										{ expr.vectorIndex });
 
 	if (!latexCoeffs[2].empty())
 		terms[2].body += latexify(std::string{ "\\sigma" },
-				{ expr.tensorIndices.first, expr.tensorIndices.second });
+									{ expr.tensorIndices.first,
+										expr.tensorIndices.second });
 
 	if (!latexCoeffs[3].empty()) {
 		terms[3].body += "\\gamma^5";
-		terms[3].body += latexify(std::string{ "\\gamma" }, { expr.pseudoVectorIndex });
+		terms[3].body += latexify(std::string{ "\\gamma" },
+									{ expr.pseudoVectorIndex });
 	}
 
 	if (!latexCoeffs[4].empty())
