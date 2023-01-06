@@ -24,8 +24,8 @@ namespace symbolic {
 template<typename Scalar>
 class ExprPrinter {
 public:
-	ExprPrinter(const std::string& dummyIndexName)
-		: _dummyIndexName{ dummyIndexName } {}
+	ExprPrinter(const std::string& dummyIndexName, size_t lineSize)
+		: _dummyIndexName{ dummyIndexName }, _lineSize{ lineSize } {}
 
 	std::string latexify(const CanonicalExpr<Scalar>& expr);
 	std::string latexify(const std::string& tensorHead,
@@ -44,6 +44,15 @@ public:
 	struct LatexTerm {
 		std::string sign;
 		std::string body;
+
+		LatexTerm(const std::string& s, const std::string& b) :
+											sign{ s }, body{ b } {}
+
+		LatexTerm() = default;
+		LatexTerm(const LatexTerm& other) = default;
+		LatexTerm(LatexTerm&& other) = default;
+
+		LatexTerm& operator=(const LatexTerm& other) = default;
 	};
 
 	using LatexTerms = std::vector<LatexTerm>;
@@ -72,6 +81,7 @@ public:
 	std::string mapIndexId(const algebra::IndexId& aId);
 private:
 	std::string _dummyIndexName;
+	size_t _lineSize;
 	std::unordered_map<algebra::IndexTag, std::string> _indexTagMap;
 };
 
@@ -231,40 +241,70 @@ ExprPrinter<Scalar>::latexify(const CanonicalExpr<Scalar>& expr) {
 			latexify(expr.coeffs(4))
 	};
 
-	LatexTerms terms;
-	terms.resize(5);
-	for (size_t i = 0; i < 5; ++i) {
+	//Add brackets if necessary
+	for (size_t i = 1; i < 5; ++i) {
 		if (latexCoeffs[i].empty())
 			continue;
 
 		if (latexCoeffs[i].size() > 1) {
-			terms[i].body = leftSquareBracket
-					+ join(latexCoeffs[i]) + rightSquareBracket;
-			terms[i].sign = "+";
-		} else {
-			terms[i] = latexCoeffs[i][0];
+			latexCoeffs[i][0].body =
+					leftSquareBracket + latexCoeffs[i][0].body;
+			latexCoeffs[i][0].sign = "+";
+			latexCoeffs[i].back().body += rightSquareBracket;
 		}
 	}
 
 	if (!latexCoeffs[1].empty())
-		terms[1].body += latexify(std::string{ "\\gamma" },
+		latexCoeffs[1].back().body += latexify(std::string{ "\\gamma" },
 										{ expr.vectorIndex });
 
 	if (!latexCoeffs[2].empty())
-		terms[2].body += latexify(std::string{ "\\sigma" },
+		latexCoeffs[2].back().body += latexify(std::string{ "\\sigma" },
 									{ expr.tensorIndices.first,
 										expr.tensorIndices.second });
 
-	if (!latexCoeffs[3].empty()) {
-		terms[3].body += "\\gamma^5";
-		terms[3].body += latexify(std::string{ "\\gamma" },
-									{ expr.pseudoVectorIndex });
-	}
+	if (!latexCoeffs[3].empty())
+		latexCoeffs[3].back().body += std::string{"\\gamma^5"}
+								+ latexify(std::string{ "\\gamma" },
+											{ expr.pseudoVectorIndex });
+
 
 	if (!latexCoeffs[4].empty())
-		terms[4].body += "\\gamma^5";
+		latexCoeffs[4].back().body += "\\gamma^5";
 
-	return join(terms);
+	LatexTerms allTerms;
+	size_t termCount = 0;
+	for (size_t i = 0; i < 5; ++i)
+		for (size_t j = 0; j < latexCoeffs[i].size(); ++j) {
+			LatexTerm term = latexCoeffs[i][j];
+
+			//Add line break
+			if (_lineSize > 0) {
+				if (0 == termCount)
+					term.body = std::string{ "&" } + term.body;
+				else if ((termCount % _lineSize) == 0) {
+					std::string lineBreak =
+							((latexCoeffs[i].size() > 0)
+									&& (j > 0) && (i > 0)) ?
+											"\\right.\\\\\n&\\left."
+											: "\\\\\n&";
+					if (term.sign.empty())
+						term.body = "-" + lineBreak + term.body;
+					else
+						term.body = lineBreak + term.sign + term.body;
+				}
+			}
+
+			allTerms.push_back(term);
+
+			++termCount;
+		}
+
+
+	if (allTerms.empty())
+		return "0";
+
+	return join(allTerms);
 }
 
 } /* namespace symbolic */

@@ -154,7 +154,7 @@ int App::compute(const std::string& input,
 	using namespace symbolic;
 	try {
 		CanonicalExpr<Number> expr = compute<Number>(input);
-		ExprPrinter<Number> printer{ _dummyName };
+		ExprPrinter<Number> printer{ _dummyName, _lineTerms };
 		output << printer.latexify(expr) << std::endl;
 		return 0;
 	} catch (std::exception& e) {
