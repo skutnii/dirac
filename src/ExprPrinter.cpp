@@ -27,6 +27,9 @@ const std::string rightBracket{ "\\right)" };
 template<>
 std::string
 ExprPrinter<algebra::Rational>::latexify(const algebra::Rational& r) {
+	if (r.den() == static_cast<unsigned long long int>(1))
+		return std::to_string(r.num());
+
 	std::stringstream ss;
 	if (r.num() < 0)
 		ss << "-";
@@ -49,11 +52,16 @@ std::string ExprPrinter<Rational>::latexify(const Complex<Rational>& c) {
 		value += " - ";
 
 	if (hasImag) {
-		value += "\\frac{";
+		std::string num{"I"};
 		unsigned long long absNum = c.imag().absNum();
 		if (absNum != 1)
-			value += std::to_string(absNum);
-		value += std::string{ "I}{" } + std::to_string(c.imag().den()) + "}";
+			num = std::to_string(absNum) + num;
+
+		if (c.imag().den() == 1)
+			value += num;
+		else
+			value += std::string{ "\\frac{" } + num + "}{"
+						+ std::to_string(c.imag().den()) + "}";
 	}
 
 	return value;

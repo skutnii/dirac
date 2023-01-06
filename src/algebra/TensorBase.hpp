@@ -19,6 +19,8 @@
 #include "concepts.hpp"
 #include "Tensorial.hpp"
 
+#include "Permutations.hpp"
+
 namespace dirac {
 
 namespace algebra {
@@ -35,7 +37,8 @@ template<Hashable IdType,
 class TensorBase {
 public:
 	using Self = TensorBase<IdType, Basis, IndexIdType>;
-	using Indices = std::vector<IndexBase<IndexIdType> >;
+	using Index = IndexBase<IndexIdType>;
+	using Indices = std::vector<Index>;
 
 	TensorBase() = delete;
 	TensorBase(const Self& other) = default;
@@ -110,6 +113,51 @@ public:
 			tmp.emplace_back(*it, isUpper);
 
 		return TensorBase{ id, tmp };
+	}
+
+	bool operator==(const TensorBase<IdType, Basis, IndexIdType>& other) const {
+		if (_id != other._id)
+			return false;
+
+		if (_indices.size() != other._indices.size())
+			return false;
+
+		for (size_t i = 0; i < _indices.size(); ++i)
+			if (_indices[i] != other._indices[i])
+				return false;
+
+		return true;
+	}
+
+	void replaceIndex(size_t pos, const Index& repl) {
+		_indices.at(pos) = repl;
+	}
+
+	/**
+	 * If callee is mappable to the argument by an index permutation,
+	 * returns the latter or an empty optional otherwise.
+	 */
+	std::optional<Permutation>
+	mappingTo(const TensorBase<IdType, Basis, IndexIdType>& other) const {
+		std::optional<Permutation> res;
+		if ((_id != other._id) || (_indices.size() != other._indices.size()))
+			return res;
+
+		forPermutations(_indices.size(),
+			[&](const Permutation& perm) {
+				if (res)
+					return;
+
+				bool match = true;
+				for (size_t i = 0; i < _indices.size(); ++i)
+					if (_indices[perm.map[i]] != other._indices[i])
+						match = false;
+
+				if (match)
+					res = perm;
+			});
+
+		return res;
 	}
 
 private:

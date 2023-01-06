@@ -16,6 +16,8 @@
 #include "Polynomials.hpp"
 #include "Complex.hpp"
 #include "Rational.hpp"
+#include "Permutations.hpp"
+#include <algorithm>
 
 namespace dirac {
 
@@ -50,10 +52,6 @@ struct Basis {
 	}
 
 };
-
-} /* namespace LI*/
-
-namespace LI {
 
 using Tensor = TensorBase<std::string, Basis, IndexId>;
 
@@ -133,7 +131,7 @@ struct TensorPolynomial : public Polynomial<Complex<Scalar>, Tensor> {
 		indices = t.indices();
 	}
 
-	void canonicalize();
+	void canonicalize() override;
 
 	bool isZero() const {
 		if (this->terms.empty())
@@ -145,7 +143,42 @@ struct TensorPolynomial : public Polynomial<Complex<Scalar>, Tensor> {
 
 		return true;
 	}
+
+	static std::optional<Term> contractIndices(const Term& src);
+
+	static std::optional<Term> tryMerge(const Term& t1, const Term& t2);
+
+	void expandEpsilonPowers();
+	void contractIndices();
+	void mergeTerms();
 };
+
+} /* namespace LI */
+
+} /* namespace algebra */
+
+} /* namespace dirac */
+
+namespace std {
+
+template<>
+struct hash<dirac::algebra::LI::Tensor> {
+	size_t operator()(const dirac::algebra::LI::Tensor& t) const {
+		size_t value = std::hash<std::string>{}(t.id());
+		for (const auto& idx: t.indices())
+			value = value ^ std::hash<dirac::algebra::TensorIndex>{}(idx);
+
+		return value;
+	}
+};
+
+}
+
+namespace dirac {
+
+namespace algebra {
+
+namespace LI {
 
 /**
  * If both indices are either upper or lower, returns metric.
@@ -215,26 +248,279 @@ inline TensorPolynomial<Scalar> operator-(const Tensor& t) {
 
 template<typename Scalar>
 void TensorPolynomial<Scalar>::canonicalize() {
-	//TODO: implement!
+	//Filter out zeros
+	typename TensorPolynomial<Scalar>::Terms tmpTerms;
+	for (typename TensorPolynomial<Scalar>::Term& term : this->terms)
+		if (term.coeff != zero<Scalar>())
+			tmpTerms.push_back(term);
+
+	this->terms = tmpTerms;
+
+	expandEpsilonPowers();
+	contractIndices();
+	mergeTerms();
+}
+
+template<typename Scalar>
+void TensorPolynomial<Scalar>::expandEpsilonPowers() {
+	typename TensorPolynomial<Scalar>::Terms tmpTerms;
+	for (typename TensorPolynomial<Scalar>::Term& term : this->terms) {
+		TensorPolynomial<Scalar> tmp{ term.coeff };
+		std::optional<Tensor> epsCache;
+
+		for (Tensor& factor : term.factors) {
+			const std::string& aId = factor.id();
+			if ((aId == Basis::delta) || (aId == Basis::eta)) {
+				tmp *= factor;
+			} else if (aId == Basis::epsilon) {
+				if (!epsCache)
+					epsCache = factor;
+				else {
+					Tensor& cached = epsCache.value();
+					if (!factor.complete() || !cached.complete())
+						throw std::runtime_error{ "Levi-Civita symbol must have four indices" };
+
+					TensorPolynomial<Scalar> expansion;
+					forPermutations(4, [&](const Permutation& perm) {
+						TensorPolynomial<Scalar> expTerm{ one<Scalar>() };
+						const TensorIndices& factorIndices = factor.indices();
+						const TensorIndices& cachedIndices = cached.indices();
+						for (unsigned int i = 0; i < 4; ++i)
+							expTerm *= eta<Scalar>(cachedIndices[i], factorIndices[perm.map[i]]);
+
+						if (perm.isEven)
+							expansion -= expTerm;
+						else
+							expansion += expTerm;
+					});
+
+					tmp *= expansion;
+					epsCache.reset();
+				}
+			}
+		}
+
+		if (epsCache)
+			tmp *= epsCache.value();
+
+		tmpTerms.insert(tmpTerms.end(), tmp.terms.begin(), tmp.terms.end());
+	}
+
+	this->terms = tmpTerms;
+}
+
+template<typename Scalar>
+void TensorPolynomial<Scalar>::contractIndices() {
+	typename TensorPolynomial<Scalar>::Terms tmpTerms;
+	tmpTerms.reserve(this->terms.size());
+
+	for (typename TensorPolynomial<Scalar>::Term& term : this->terms) {
+		std::optional<Term> tmp = contractIndices(term);
+		if (tmp)
+			tmpTerms.push_back(tmp.value());
+	}
+
+	this->terms = tmpTerms;
+}
+
+template<typename Scalar>
+std::optional<typename TensorPolynomial<Scalar>::Term>
+TensorPolynomial<Scalar>::contractIndices(const typename TensorPolynomial<Scalar>::Term& src) {
+	if (src.coeff == zero<Scalar>())
+		return std::optional<Term>{};
+
+	if (src.factors.empty())
+		return src;
+
+	Term res{ src.coeff };
+
+	std::vector<Tensor> metrics;
+	metrics.reserve(src.factors.size());
+
+	std::vector<Tensor> epsilons;
+	epsilons.reserve(src.factors.size());
+
+	for (const Tensor& factor : src.factors) {
+		if (factor.id() ==  Basis::epsilon)
+			epsilons.push_back(factor);
+		else if ((factor.id() == Basis::eta) || (factor.id() == Basis::delta))
+			metrics.push_back(factor);
+		else
+			throw std::runtime_error{ "Invalid Lorentz-invariant tensor id" };
+	}
+
+	while (!metrics.empty()) {
+		Tensor first = metrics[0];
+		metrics.erase(metrics.begin());
+
+		const TensorIndex& i1 = first.indices()[0];
+		const TensorIndex& i2 = first.indices()[1];
+
+		//Check for trace
+		if (i1.dual(i2)) {
+			res.coeff *= Complex<Scalar>{ 4, 0 };
+			continue;
+		}
+
+		bool merged = false;
+
+		//Try contracting with other metric tensors
+		for (Tensor& m : metrics) {
+			if (merged)
+				continue;
+
+			TensorIndices tmpIndices;
+			tmpIndices.reserve(m.indices().size());
+			for (const TensorIndex& idx: m.indices()) {
+				if (idx.dual(i1) && !merged) {
+					tmpIndices.push_back(i2);
+					merged = true;
+				} else if (idx.dual(i2) && !merged) {
+					tmpIndices.push_back(i1);
+					merged = true;
+				} else {
+					tmpIndices.push_back(idx);
+				}
+			}
+
+			if (!merged)
+				continue;
+
+			bool hasUpper = false;
+			bool hasLower = false;
+			for (TensorIndex& idx: tmpIndices)
+				if (idx.isUpper)
+					hasUpper = true;
+				else
+					hasLower = true;
+
+			std::string tensorId = (hasUpper && hasLower) ? Basis::delta : Basis::eta;
+			m = Tensor::create(tensorId, tmpIndices);
+		}
+
+		//Now try contracting with epsilons
+		for (Tensor& eps : epsilons) {
+			if (merged)
+				continue;
+
+			const TensorIndices& indices = eps.indices();
+			for (size_t i = 0; i < indices.size(); ++i) {
+				if (indices[i].dual(i1) && !merged) {
+					eps.replaceIndex(i, i2);
+					merged = true;
+				} else if (indices[i].dual(i2) && !merged) {
+					eps.replaceIndex(i, i1);
+					merged = true;
+				}
+			}
+		}
+
+		if (!merged)
+			res.factors.push_back(first);
+	}
+
+	for (Tensor& eps : epsilons) {
+		const TensorIndices& indices = eps.indices();
+
+		//Check for same indices in Livi-Civita symbol
+		for (size_t i = 0; i < indices.size(); ++i)
+			for (size_t j = i + 1; j < indices.size(); ++j)
+				if (indices[i].dual(indices[j]) || (indices[i] == indices[j]))
+					return std::optional<Term>{};
+
+		res.factors.push_back(eps);
+	}
+
+	return res;
+}
+
+template<typename Scalar>
+std::optional<typename TensorPolynomial<Scalar>::Term>
+TensorPolynomial<Scalar>::tryMerge(const Term &t1, const Term &t2) {
+	if (t1.factors.size() != t2.factors.size())
+		return std::optional<Term>{};
+
+	bool even = true;
+	std::unordered_set<size_t> iMap1;
+	iMap1.reserve(t1.factors.size());
+	for (size_t i = 0; i < t1.factors.size(); ++i)
+		iMap1.insert(i);
+
+	std::unordered_set<size_t> iMap2;
+	iMap2.reserve(t2.factors.size());
+	for (size_t i = 0; i < t2.factors.size(); ++i)
+		iMap2.insert(i);
+
+	while (!iMap1.empty()) {
+		size_t iFirst = *iMap1.begin();
+		iMap1.erase(iFirst);
+
+		std::optional<size_t> iMatch;
+		for (size_t iSecond : iMap2) {
+			if (iMatch)
+				continue;
+
+			const Tensor& first = t1.factors[iFirst];
+			const Tensor& second = t2.factors[iSecond];
+
+			std::optional<Permutation> mapping = first.mappingTo(second);
+			if (mapping) {
+				iMatch = iSecond;
+
+				if (first.id() == Basis::epsilon) {
+					even = (even && mapping.value().isEven)
+							|| (!even && !mapping.value().isEven);
+				}
+			}
+		}
+
+		//If a non-matching factor is found, return empty optional
+		if (iMatch)
+			iMap2.erase(iMatch.value());
+		else
+			return std::optional<Term>{};
+	}
+
+	Term res{ t1 };
+	if (even)
+		res.coeff += t2.coeff;
+	else
+		res.coeff -= t2.coeff;
+
+	return res;
+}
+
+template<typename Scalar>
+void TensorPolynomial<Scalar>::mergeTerms() {
+	typename TensorPolynomial<Scalar>::Terms tmpTerms;
+	tmpTerms.reserve(this->terms.size());
+
+	typename TensorPolynomial<Scalar>::Terms rest = this->terms;
+	while (!rest.empty()) {
+		Term first = rest[0];
+		rest.erase(rest.begin());
+
+		typename TensorPolynomial<Scalar>::Terms tmp;
+		tmp.reserve(rest.size());
+		for (Term& other: rest) {
+			std::optional<Term> merged = tryMerge(first, other);
+			if (merged)
+				first = merged.value();
+			else
+				tmp.push_back(other);
+		}
+
+		tmpTerms.push_back(first);
+		rest = tmp;
+	}
+
+	this->terms = tmpTerms;
 }
 
 } /*namespace LI*/
 
-template<>
-inline void canonicalize<LI::TensorPolynomial<double>,
-	Complex<double>, LI::Tensor>(LI::TensorPolynomial<double>& tp) {
-	tp.canonicalize();
-}
-
-template<>
-inline void canonicalize<LI::TensorPolynomial<Rational>,
-	Complex<Rational>, LI::Tensor>(LI::TensorPolynomial<Rational>& tp) {
-	tp.canonicalize();
 }
 
 }
-
-}
-
 
 #endif /* SRC_ALGEBRA_LORENTZINVARIANT_HPP_ */

@@ -73,17 +73,17 @@ struct Polynomial {
 
 	Polynomial<Coeff, Factor>&
 	operator=(const Polynomial<Coeff, Factor>& other) = default;
-};
+	virtual ~Polynomial() = default;
 
-/**
- * Polynomial normalization method.
- * Default implementation does nothing.
- * Specialize for specific polynomial types.
- */
-template<class P, typename CoeffType, typename Factor>
-requires std::derived_from<P, Polynomial<CoeffType, Factor> >
-inline void canonicalize(P& p) {
-}
+	/**
+	 * Polynomial normalization method.
+	 * Default implementation does nothing.
+	 * Specialize for specific polynomial types.
+	 */
+	virtual void canonicalize() {
+	}
+
+};
 
 /**
  * Mutating polynomial addition ("+=" operator)
@@ -92,7 +92,7 @@ template<class P, typename CoeffType, typename Factor>
 requires std::derived_from<P, Polynomial<CoeffType, Factor> >
 P& add(P& p1, const P& p2) {
 	p1.terms.insert(p1.terms.end(), p2.terms.begin(), p2.terms.end());
-	canonicalize<P, CoeffType, Factor>(p1);
+	p1.canonicalize();
 	return p1;
 }
 
@@ -122,7 +122,7 @@ P& sub(P& p1, const P& p2) {
 				return -t;
 			});
 
-	canonicalize<P, CoeffType, Factor>(p1);
+	p1.canonicalize();
 	return p1;
 }
 
@@ -174,7 +174,7 @@ P prod(const P& p1, const P& p2) {
 		for (size_t j = 0; j < size2; ++j)
 			prod.terms.emplace_back(p1.terms[i] * p2.terms[j]);
 
-	canonicalize<P, CoeffType, Factor>(prod);
+	prod.canonicalize();
 
 	return prod;
 }

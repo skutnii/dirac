@@ -33,12 +33,27 @@ struct IndexBase {
 	bool operator==(const IndexBase& other) const {
 		return (isUpper == other.isUpper) && (id == other.id);
 	}
+
+	bool dual(const IndexBase<IdType>& other) const {
+		return (id == other.id) && (isUpper == !other.isUpper);
+	}
 };
 
 using TensorIndex = IndexBase<IndexId>;
 using TensorIndices = std::vector<TensorIndex>;
 
 }
+
+}
+
+namespace std {
+
+template<dirac::Hashable IdType>
+struct hash<dirac::algebra::IndexBase<IdType>> {
+	size_t operator()(const dirac::algebra::IndexBase<IdType>& idx) const {
+		return std::hash<IdType>{}(idx.id) ^ static_cast<size_t>(idx.isUpper);
+	}
+};
 
 }
 

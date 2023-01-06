@@ -112,8 +112,8 @@ template<typename Number>
 void Compiler<Number>::pushValue(const Token<Number>& valueToken) {
 	/*
 	 * Promote consecutive values to list concatenation
-	 * \a\b -> \a|\b.
-	 * Also }\a = }|\a.
+	 * \a\b -> \a & \b.
+	 * Also }\a -> } & \a.
 	 */
 	if ((_state == Value) || (_state == RBrace))
 		pushOp(Op::Splice);
@@ -173,6 +173,15 @@ void Compiler<Number>::pushOp(const Op &op) {
 	 * Process opening bracket
 	 */
 	if (op == Op::LBrace) {
+		/*
+		 * Opening bracket after a value or closing bracket
+		 * is promoted to list concatenation
+		 * \a{ -> \a & {.
+		 * Also }{ -> } & {.
+		 */
+		if ((_state == Value) || (_state == RBrace))
+			pushOp(Op::Splice);
+
 		doPush(op);
 		return;
 	}

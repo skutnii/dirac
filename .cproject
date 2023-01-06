@@ -18,7 +18,7 @@
 					<folderInfo id="cdt.managedbuild.config.gnu.cross.exe.debug.1162022015." name="/" resourcePath="">
 						<toolChain id="cdt.managedbuild.toolchain.gnu.cross.exe.debug.1410024332" name="Cross GCC" superClass="cdt.managedbuild.toolchain.gnu.cross.exe.debug">
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="cdt.managedbuild.targetPlatform.gnu.cross.930793079" isAbstract="false" osList="all" superClass="cdt.managedbuild.targetPlatform.gnu.cross"/>
-							<builder arguments="-DCMAKE_BUILD_TYPE=Debug" buildPath="${workspace_loc:/dirac}" command="${workspace_loc:/dirac}/build.sh" id="cdt.managedbuild.builder.gnu.cross.2014777229" incrementalBuildTarget="" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" superClass="cdt.managedbuild.builder.gnu.cross"/>
+							<builder arguments="-DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS_DEBUG=&quot;-ggdb2&quot;" buildPath="${workspace_loc:/dirac}" command="${workspace_loc:/dirac}/build.sh" id="cdt.managedbuild.builder.gnu.cross.2014777229" incrementalBuildTarget="" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" superClass="cdt.managedbuild.builder.gnu.cross"/>
 							<tool id="cdt.managedbuild.tool.gnu.cross.c.compiler.609935364" name="Cross GCC Compiler" superClass="cdt.managedbuild.tool.gnu.cross.c.compiler">
 								<option defaultValue="gnu.c.optimization.level.none" id="gnu.c.compiler.option.optimization.level.1907868479" name="Optimization Level" superClass="gnu.c.compiler.option.optimization.level" useByScannerDiscovery="false" valueType="enumerated"/>
 								<option defaultValue="gnu.c.debugging.level.max" id="gnu.c.compiler.option.debugging.level.1521601492" name="Debug Level" superClass="gnu.c.compiler.option.debugging.level" useByScannerDiscovery="false" valueType="enumerated"/>
@@ -119,4 +119,5 @@
 			<resource resourceType="PROJECT" workspacePath="/dirac"/>
 		</configuration>
 	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
 </cproject>
