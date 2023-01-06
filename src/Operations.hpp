@@ -21,8 +21,8 @@ namespace symbolic {
 template<typename Scalar>
 using Operand = std::variant<Literal,
 		algebra::Complex<Scalar>,
-		symbolic::Tensor,
-		symbolic::GammaPolynomial<Scalar> >;
+		Tensor,
+		GammaPolynomial<Scalar> >;
 
 template<typename Scalar>
 using OpList = std::list<Operand<Scalar> >;
@@ -258,11 +258,37 @@ OpList<Scalar> toProduct(const OpList<Scalar>& ops) {
 }
 
 template<typename Scalar>
-inline OpList<Scalar> join(const OpList<Scalar>& list1, const OpList<Scalar>& list2) {
+inline OpList<Scalar>
+join(const OpList<Scalar>& list1, const OpList<Scalar>& list2) {
 	OpList<Scalar> res;
 	res.insert(res.end(), list1.begin(), list1.end());
 	res.insert(res.end(), list2.begin(), list2.end());
 	return res;
+}
+
+template<typename Scalar>
+CanonicalExpr<Scalar> eval(const Operand<Scalar>& value) {
+	using namespace symbolic;
+	if (std::holds_alternative<Complex<Scalar>>(value)) {
+		CanonicalExpr<Scalar> res;
+		res.coeffs(0) = std::get<Complex<Scalar>>(value);
+		return res;
+	}
+
+	GammaPolynomial<Scalar> poly = getPoly<Scalar>(value);
+
+	return reduceGamma<Scalar>(poly);
+}
+
+template<typename Scalar>
+CanonicalExpr<Scalar> eval(const OpList<Scalar>& ops) {
+	if (ops.empty())
+		throw std::runtime_error{ "Empty expression" };
+
+	if (ops.size() == 1)
+		return eval<Scalar>(ops.front());
+
+	return eval<Scalar>(toProduct<Scalar>(ops));
 }
 
 }

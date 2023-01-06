@@ -6,25 +6,89 @@
  */
 
 #include "App.hpp"
-
+#include "algebra/Rational.hpp"
 #include <iostream>
-#include "eval.hpp"
-#include "ExprPrinter.hpp"
-#include "utils.hpp"
 
 namespace dirac {
 
-using namespace symbolic;
+static const std::string exprOption{ "-e" };
+static const std::string modeOption{ "-m" };
+static const std::string lineTermsOption{ "-l" };
+static const std::string dummyNameOption{ "-d" };
+
+//----------------------------------------------------------------------
 
 App::App(int argc, char **argv) {
+	enum Option {
+		None,
+		Expr,
+		Mode,
+		LineTerms,
+		DummyName,
+	};
+
+	Option expectedOption = None;
+	for (int argNum = 1; argNum < argc; ++argNum) {
+		char* arg = argv[argNum];
+
+		//Process option keys
+
+		if (exprOption == arg) {
+			expectedOption = Expr;
+			continue;
+		}
+
+		if (modeOption == arg) {
+			expectedOption = Mode;
+			continue;
+		}
+
+		if (lineTermsOption == arg) {
+			expectedOption = LineTerms;
+			continue;
+		}
+
+		if (dummyNameOption == arg) {
+			expectedOption = DummyName;
+			continue;
+		}
+
+		//Process option value
+
+		switch(expectedOption) {
+		case Expr:
+			_commandLineExpr = arg;
+			break;
+		case Mode: {
+			std::optional<bool> maybeValue = getUseFloat(arg);
+			if (maybeValue.has_value())
+				_useFloat = maybeValue.value();
+			break;
+		}
+		case LineTerms: {
+			std::optional<size_t> maybeTerms = getLineTerms(arg);
+			if (maybeTerms.has_value())
+				_lineTerms = maybeTerms.value();
+			break;
+		}
+		case DummyName:
+			_dummyName = arg;
+			break;
+		default:
+			break;
+		};
+
+		expectedOption = None;
+	}
 }
 
-void App::setVar(const std::string &name, const std::string &value) {
+//----------------------------------------------------------------------
+
+void App::setVar(const std::string& name, const std::string& value) {
 	if (name == "mode") {
-		if (value == "float")
-			_useFloat = true;
-		else if (value == "rational")
-			_useFloat = false;
+		std::optional<bool> maybeValue = getUseFloat(value);
+		if (maybeValue.has_value())
+			_useFloat = maybeValue.value();
 		else
 			std::cout
 				<< "Invalid mode. Must be \"float\" or \"rational\""
@@ -33,38 +97,82 @@ void App::setVar(const std::string &name, const std::string &value) {
 		return;
 	}
 
+	if (name == "line_terms") {
+		std::optional<size_t> maybeTerms = getLineTerms(value);
+		if (maybeTerms.has_value()) {
+			_lineTerms = maybeTerms.value();
+		} else
+			std::cout
+				<< "Invalid line terms count."
+					" Must be an integer constant or \"inf\""
+				<< std::endl;
+
+		return;
+	}
+
+	if (name == "dummy") {
+		_dummyName = value;
+		return;
+	}
+
 	std::cout << "Unknown variable name " << name << std::endl;
 }
 
-template<typename Number>
-static int process(const std::string& input, std::ostream& output) {
-	try {
-		CanonicalExpr<Number> expr = eval<Number>(input);
-		ExprPrinter<Number> printer{ "\\omega" };
-		output << printer.latexify(expr) << std::endl;
-		return 0;
-	} catch (std::exception& e) {
-		output << e.what() << std::endl;
-		return 1;
-	}
-}
+//----------------------------------------------------------------------
 
 int App::run() {
 	if (_commandLineExpr.empty())
 		return runShell();
 
-	return compute(_commandLineExpr);
+	return compute<void>(_commandLineExpr, std::cout);
 }
 
-int App::compute(const std::string &expr) const {
+//----------------------------------------------------------------------
+
+template<>
+int App::compute<void>(const std::string& input,
+		std::ostream& output) const noexcept {
 	if (_useFloat)
-		return process<double>(expr, std::cout);
+		return compute<double>(input, output);
 	else
-		return process<algebra::Rational>(expr, std::cout);
+		return compute<algebra::Rational>(input, output);
 }
+
+//----------------------------------------------------------------------
+
+std::optional<bool> App::getUseFloat(const std::string &value) {
+	if (value == "float")
+		return true;
+	else if (value == "rational")
+		return false;
+
+	return std::optional<bool>{};
+}
+
+//----------------------------------------------------------------------
+
+std::optional<size_t> App::getLineTerms(const std::string &str) {
+	try {
+		if (str == "inf")
+			return 0;
+
+		size_t num_chars = std::numeric_limits<size_t>::max();
+		size_t count = std::stoll(str, &num_chars);
+		if (num_chars < str.size())
+			return std::optional<size_t>{};
+
+		return count;
+	} catch(...) {
+		return std::optional<size_t>{};
+	}
+}
+
+//----------------------------------------------------------------------
 
 int App::runShell() {
-	std::cout << "This is Dirac matrices calculator by Sergii Kutnii" << std::endl;
+	std::cout <<
+			"This is Dirac matrices calculator by Sergii Kutnii"
+			<< std::endl;
 
 	//Read-eval-print loop
 	std::string input;
@@ -85,7 +193,7 @@ int App::runShell() {
 			continue;
 		}
 
-		compute(input);
+		compute<void>(input, std::cout);
 	}
 
 	return 0;

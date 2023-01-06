@@ -153,53 +153,53 @@ CanonicalExpr<Scalar> reduceGamma(const GammaPolynomial<Scalar>& p) {
 	return expr;
 }
 
+template<typename Scalar>
+inline GammaPolynomial<Scalar>
+operator+(const GammaPolynomial<Scalar>& p1,
+		const GammaPolynomial<Scalar>& p2) {
+	return algebra::sum<GammaPolynomial<Scalar>,
+			algebra::Complex<Scalar>, Tensor>(p1, p2);
 }
 
 template<typename Scalar>
-inline symbolic::GammaPolynomial<Scalar>
-operator+(const symbolic::GammaPolynomial<Scalar>& p1,
-		const symbolic::GammaPolynomial<Scalar>& p2) {
-	return algebra::sum<symbolic::GammaPolynomial<Scalar>,
-			algebra::Complex<Scalar>, symbolic::Tensor>(p1, p2);
+inline GammaPolynomial<Scalar>
+operator-(const GammaPolynomial<Scalar>& p1,
+		const GammaPolynomial<Scalar>& p2) {
+	return algebra::diff<GammaPolynomial<Scalar>,
+			algebra::Complex<Scalar>, Tensor>(p1, p2);
 }
 
 template<typename Scalar>
-inline symbolic::GammaPolynomial<Scalar>
-operator-(const symbolic::GammaPolynomial<Scalar>& p1,
-		const symbolic::GammaPolynomial<Scalar>& p2) {
-	return algebra::diff<symbolic::GammaPolynomial<Scalar>,
-			algebra::Complex<Scalar>, symbolic::Tensor>(p1, p2);
+inline GammaPolynomial<Scalar>
+operator-(const GammaPolynomial<Scalar>& p) {
+	return algebra::negate<GammaPolynomial<Scalar>,
+			algebra::Complex<Scalar>, Tensor>(p);
 }
 
 template<typename Scalar>
-inline symbolic::GammaPolynomial<Scalar>
-operator-(const symbolic::GammaPolynomial<Scalar>& p) {
-	return algebra::negate<symbolic::GammaPolynomial<Scalar>,
-			algebra::Complex<Scalar>, symbolic::Tensor>(p);
+inline GammaPolynomial<Scalar>
+operator*(const GammaPolynomial<Scalar>& p1,
+		const GammaPolynomial<Scalar>& p2) {
+	return algebra::prod<GammaPolynomial<Scalar>,
+			algebra::Complex<Scalar>, Tensor>(p1, p2);
 }
 
 template<typename Scalar>
-inline symbolic::GammaPolynomial<Scalar>
-operator*(const symbolic::GammaPolynomial<Scalar>& p1,
-		const symbolic::GammaPolynomial<Scalar>& p2) {
-	return algebra::prod<symbolic::GammaPolynomial<Scalar>,
-			algebra::Complex<Scalar>, symbolic::Tensor>(p1, p2);
-}
-
-template<typename Scalar>
-inline symbolic::GammaPolynomial<Scalar>
+inline GammaPolynomial<Scalar>
 operator*(const algebra::Complex<Scalar>& c,
-		const symbolic::GammaPolynomial<Scalar>& p) {
-	return algebra::prod<symbolic::GammaPolynomial<Scalar>,
-			algebra::Complex<Scalar>, symbolic::Tensor>(c, p);
+		const GammaPolynomial<Scalar>& p) {
+	return algebra::prod<GammaPolynomial<Scalar>,
+			algebra::Complex<Scalar>, Tensor>(c, p);
 }
 
 template<typename Scalar>
-inline symbolic::GammaPolynomial<Scalar>
-operator*(const symbolic::GammaPolynomial<Scalar>& p,
+inline GammaPolynomial<Scalar>
+operator*(const GammaPolynomial<Scalar>& p,
 		const algebra::Complex<Scalar>& c) {
-	return algebra::prod<symbolic::GammaPolynomial<Scalar>,
-			algebra::Complex<Scalar>, symbolic::Tensor>(p, c);
+	return algebra::prod<GammaPolynomial<Scalar>,
+			algebra::Complex<Scalar>, Tensor>(p, c);
+}
+
 }
 
 }

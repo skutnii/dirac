@@ -98,7 +98,8 @@ StringInput<Number>::nextToken() {
 				+ ": symbols must start with \"\\\"");
 
 	throw std::runtime_error{std::string{ _content }
-			+ ": unrecognized character \"" + std::string{ next } + "\""};
+			+ ": unrecognized character \""
+			+ std::string{ next } + "\""};
 
 	return std::optional<Token<Number>>{};
 }

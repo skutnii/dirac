@@ -38,7 +38,9 @@ StringInput<algebra::Rational>::nextNumber() {
 	}
 
 	skipTo(iter);
-	return tmp.empty() ? std::optional<algebra::Rational>{} : algebra::Rational{ std::stoll(tmp) };
+	return tmp.empty() ?
+			std::optional<algebra::Rational>{}
+				: algebra::Rational{ std::stoll(tmp) };
 }
 
 } /* namespace dirac */
