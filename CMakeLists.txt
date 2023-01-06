@@ -14,6 +14,7 @@ add_executable(dirac "${SRC_LOC}/main.cpp"
 					 "${SRC_LOC}/Operations.cpp"
 					 "${SRC_LOC}/ExprPrinter.cpp"
 					 "${SRC_LOC}/utils.cpp"
+					 "${SRC_LOC}/App.cpp"
 					 "${ALGEBRA_LOC}/LorentzInvariant.cpp"
 					 "${ALGEBRA_LOC}/Rational.cpp"
 					 "${ALGEBRA_LOC}/Permutations.cpp")
