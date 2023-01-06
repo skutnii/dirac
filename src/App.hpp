@@ -50,6 +50,10 @@ public:
 	 * 		"inf" or 0 meaning unlimited or integer expression,
 	 * 		unlimited by default;
 	 * 	- dummy: dummy index label, string, default is "\omega".
+	 * 	- apply_symmetry: boolean, specifies whether the terms
+	 * 						in the coefficient at \sigma^{\mu\nu}
+	 * 						will be merged using antisymmetry of \sigma,
+	 * 						default is true.
 	 */
 	void setVar(const std::string& name, const std::string& value);
 
@@ -73,6 +77,12 @@ public:
 	 * "inf" or 0 means no line breaks.
 	 */
 	static std::optional<size_t> getLineTerms(const std::string& str);
+
+	/**
+	 * Convert string to boolean. Returns true for "true",
+	 * false for "false", empty optional otherwise.
+	 */
+	static std::optional<bool> getBoolean(const std::string& str);
 
 	/**
 	 * Process an expression and print the result to output.
@@ -102,6 +112,7 @@ private:
 	int runShell();
 
 	bool _useFloat = false;
+	bool _applySymmetry = true;
 	size_t _lineTerms = 0;
 	std::string _commandLineExpr;
 	std::string _dummyName = "\\omega";

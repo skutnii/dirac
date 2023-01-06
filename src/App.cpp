@@ -15,6 +15,7 @@ static const std::string exprOption{ "-e" };
 static const std::string modeOption{ "-m" };
 static const std::string lineTermsOption{ "-l" };
 static const std::string dummyNameOption{ "-d" };
+static const std::string applySymmetryOption{ "-s" };
 
 //----------------------------------------------------------------------
 
@@ -25,6 +26,7 @@ App::App(int argc, char **argv) {
 		Mode,
 		LineTerms,
 		DummyName,
+		ApplySymmetry
 	};
 
 	Option expectedOption = None;
@@ -53,6 +55,11 @@ App::App(int argc, char **argv) {
 			continue;
 		}
 
+		if (applySymmetryOption == arg) {
+			expectedOption = ApplySymmetry;
+			continue;
+		}
+
 		//Process option value
 
 		switch(expectedOption) {
@@ -74,6 +81,12 @@ App::App(int argc, char **argv) {
 		case DummyName:
 			_dummyName = arg;
 			break;
+		case ApplySymmetry: {
+			std::optional<bool> maybeValue = getBoolean(arg);
+			if (maybeValue.has_value())
+				_applySymmetry = maybeValue.value();
+			break;
+		}
 		default:
 			break;
 		};
@@ -112,6 +125,17 @@ void App::setVar(const std::string& name, const std::string& value) {
 
 	if (name == "dummy") {
 		_dummyName = value;
+		return;
+	}
+
+	if (name == "apply_symmetry") {
+		std::optional<bool> maybeValue = getBoolean(value);
+		if (maybeValue.has_value())
+			_applySymmetry = maybeValue.value();
+		else
+			std::cout
+				<< "Invalid boolean literal. "
+				   "Must be \"true\" or \"false\"" << std::endl;
 		return;
 	}
 
@@ -165,6 +189,18 @@ std::optional<size_t> App::getLineTerms(const std::string &str) {
 	} catch(...) {
 		return std::optional<size_t>{};
 	}
+}
+
+//----------------------------------------------------------------------
+
+std::optional<bool> App::getBoolean(const std::string &str) {
+	if (str == "true")
+		return true;
+
+	if (str == "false")
+		return false;
+
+	return std::optional<bool>{};
 }
 
 //----------------------------------------------------------------------
