@@ -31,8 +31,10 @@ public:
 	Rational(long long int n) : Rational{ n, 1 } {}
 	Rational(int n) : Rational{ n, 1 } {}
 
-	Rational(const Rational& other) : _num{ other._num }, _den{ other._den } {};
-	Rational(Rational&& other) : _num{ other._num }, _den{ other._den } {};
+	Rational(const Rational& other) :
+		_num{ other._num }, _den{ other._den } {};
+	Rational(Rational&& other) :
+		_num{ other._num }, _den{ other._den } {};
 
 	Rational& operator=(const Rational& other) {
 		_num = other._num;

@@ -30,7 +30,8 @@ template<typename Number>
 class Compiler {
 public:
 	/**
-	 * Returns true at the beginning of an expression or immediately after a bracket;
+	 * Returns true at the beginning of an expression
+	 * or immediately after a bracket;
 	 * false otherwise
 	 */
 	bool isNewSubexpr() {
@@ -54,7 +55,8 @@ public:
 
 	template<InputSequence<Number> Input>
 	void compile(Input& input) {
-		while (std::optional<Token<Number>> maybeToken = input.nextToken())
+		while (std::optional<Token<Number>>
+				maybeToken = input.nextToken())
 			pushToken(maybeToken.value());
 
 		popAll();
@@ -144,18 +146,21 @@ void Compiler<Number>::pushOp(const Op &op) {
 	if (op != Op::LBrace) {
 		if (_state == Empty)
 			throw std::runtime_error{
-				"Syntax error: expressions cannot start with " + op.str()};
+				"Syntax error: expressions cannot start with "
+													+ op.str()};
 
 		bool isAfterBracket = (_state == LBrace);
 		if (isAfterBracket || (_state == Operator)) {
 			bool isBracket = (op == Op::RBrace);
 
 			if (isBracket && isAfterBracket)
-				throw std::runtime_error{ "Syntax error: empty bracket" };
+				throw std::runtime_error{
+				"Syntax error: empty bracket" };
 
 			if (!isBracket && isAfterBracket)
 				throw std::runtime_error{
-					"Syntax error: " + op.str() + " cannot follow an opening bracket" };
+					"Syntax error: " + op.str()
+							+ " cannot follow an opening bracket" };
 
 			if (isBracket && !isAfterBracket)
 				throw std::runtime_error{
@@ -285,7 +290,8 @@ void Compiler<Number>::popAll() {
 					"Syntax error: unary minus requires an argument" };
 			else if (_body.size() < 2)
 				throw std::runtime_error{
-					"Syntax error: " + topOp.str() + " requires two arguments." };
+					"Syntax error: " + topOp.str()
+							+ " requires two arguments." };
 
 			return false;
 		});

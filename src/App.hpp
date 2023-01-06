@@ -11,9 +11,10 @@
 #include <optional>
 #include <string>
 #include <limits>
+
+#include "algebra/Gamma.hpp"
 #include "ExprPrinter.hpp"
 #include "utils.hpp"
-#include "Symbolic.hpp"
 #include "Compiler.hpp"
 #include "Interpreter.hpp"
 #include "StringInput.hpp"

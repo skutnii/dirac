@@ -16,8 +16,8 @@
 #include <optional>
 #include <functional>
 
+#include "algebra/Gamma.hpp"
 #include "algebra/GammaMatrix.hpp"
-#include "Symbolic.hpp"
 #include "Operations.hpp"
 
 namespace dirac {
@@ -43,8 +43,11 @@ public:
 		return _stack;
 	}
 private:
-	using BinaryOp = std::function<OpList<Scalar> (const OpList<Scalar>&, const OpList<Scalar>&)>;
-	using UnaryOp = std::function<OpList<Scalar> (const OpList<Scalar>&)>;
+	using BinaryOp =
+			std::function<OpList<Scalar> (const OpList<Scalar>&,
+											const OpList<Scalar>&)>;
+	using UnaryOp =
+			std::function<OpList<Scalar> (const OpList<Scalar>&)>;
 
 	void performBinary(const BinaryOp& binOp);
 	void performUnary(const UnaryOp& unaryOp);
@@ -67,11 +70,13 @@ void Interpreter<Scalar>::exec(const Token<Scalar>& token) {
 template<typename Scalar>
 void Interpreter<Scalar>::exec(const Op& op) {
 	if (op == Op::Plus)
-		performBinary([](const OpList<Scalar>& a, const OpList<Scalar>& b) -> OpList<Scalar> {
+		performBinary([](const OpList<Scalar>& a,
+				const OpList<Scalar>& b) -> OpList<Scalar> {
 			return sum<Scalar>(a, b);
 		});
 	else if (op == Op::Minus)
-		performBinary([](const OpList<Scalar>& a, const OpList<Scalar>& b) -> OpList<Scalar> {
+		performBinary([](const OpList<Scalar>& a,
+				const OpList<Scalar>& b) -> OpList<Scalar> {
 			return diff<Scalar>(a, b);
 		});
 	else if (op == Op::UMinus)
@@ -79,33 +84,40 @@ void Interpreter<Scalar>::exec(const Op& op) {
 			return neg<Scalar>(a);
 		});
 	else if (op == Op::Mul)
-		performBinary([](const OpList<Scalar>& a, const OpList<Scalar>& b) -> OpList<Scalar> {
+		performBinary([](const OpList<Scalar>& a,
+				const OpList<Scalar>& b) -> OpList<Scalar> {
 			return prod<Scalar>(a, b);
 		});
 	else if (op == Op::Div)
-		performBinary([](const OpList<Scalar>& a, const OpList<Scalar>& b) -> OpList<Scalar> {
+		performBinary([](const OpList<Scalar>& a,
+				const OpList<Scalar>& b) -> OpList<Scalar> {
 			return div<Scalar>(a, b);
 		});
 	else if (op == Op::Subs)
-		performBinary([](const OpList<Scalar>& a, const OpList<Scalar>& b) -> OpList<Scalar> {
+		performBinary([](const OpList<Scalar>& a,
+				const OpList<Scalar>& b) -> OpList<Scalar> {
 			return subscript<Scalar>(a, b);
 		});
 	else if (op == Op::Super)
-		performBinary([](const OpList<Scalar>& a, const OpList<Scalar>& b) -> OpList<Scalar> {
+		performBinary([](const OpList<Scalar>& a,
+				const OpList<Scalar>& b) -> OpList<Scalar> {
 			return superscript<Scalar>(a, b);
 		});
 	else if (op == Op::Splice)
-		performBinary([](const OpList<Scalar>& a, const OpList<Scalar>& b) -> OpList<Scalar> {
+		performBinary([](const OpList<Scalar>& a,
+				const OpList<Scalar>& b) -> OpList<Scalar> {
 			return join<Scalar>(a, b);
 		});
 	else
-		throw std::runtime_error{ "Unsupported operation: " + op.str() };
+		throw std::runtime_error{
+			"Unsupported operation: " + op.str() };
 }
 
 template<typename Scalar>
 void Interpreter<Scalar>::performBinary(const BinaryOp &binOp) {
 	if (_stack.size() < 2)
-		throw std::runtime_error{ "Not enough arguments for a binary operation" };
+		throw std::runtime_error{
+			"Not enough arguments for a binary operation" };
 
 	OpList<Scalar>& second = _stack[0];
 	OpList<Scalar>& first = _stack[1];
@@ -118,7 +130,8 @@ void Interpreter<Scalar>::performBinary(const BinaryOp &binOp) {
 template<typename Scalar>
 void Interpreter<Scalar>::performUnary(const UnaryOp &unaryOp) {
 	if (_stack.empty())
-		throw std::runtime_error{ "Not enough arguments for an unary operation" };
+		throw std::runtime_error{
+			"Not enough arguments for an unary operation" };
 
 	OpList<Scalar> res = unaryOp(_stack.front());
 	_stack.pop_front();

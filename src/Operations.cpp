@@ -6,8 +6,8 @@
  */
 
 #include "Operations.hpp"
-#include "Symbolic.hpp"
 #include <variant>
+#include "algebra/Gamma.hpp"
 
 namespace dirac {
 
