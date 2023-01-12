@@ -25,16 +25,16 @@ TEXT
 
 ENDDOC = "\\end{document}"
 
-outName = ARGV[1]
-if outName.nil? 
-	outName = "tests"
+out_name = ARGV[1]
+if out_name.nil? 
+	out_name = "tests"
 end
 
-shortName = outName
-if !outName.end_with? ".tex"
-	outName = outName + ".tex"
+short_name = out_name
+if !out_name.end_with? ".tex"
+	out_name = out_name + ".tex"
 else
-	shortName = outName.gsub(".tex", "")
+	short_name = out_name.gsub(".tex", "")
 end
 
 TESTS = [
@@ -132,7 +132,7 @@ TESTS = [
 			:lhs => "\\gamma^5\\gamma^\\mu\\gamma^5"}
 ]
 
-output = File.open(outName, "w+")
+output = File.open(out_name, "w+")
 
 begin
 	output.write(PREAMBLE)
@@ -151,7 +151,7 @@ ensure
 	output.close()
 end
 
-pdflatex = "pdflatex -halt-on-error #{shortName}"
+pdflatex = "pdflatex -halt-on-error #{short_name}"
 print "Running #{pdflatex}...\n" 
 	
 system(pdflatex)
