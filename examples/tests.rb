@@ -1,4 +1,4 @@
-require 'open3'
+require File.expand_path('common.rb', File.dirname(__FILE__))
 
 dirac = ARGV[0]
 
@@ -35,68 +35,6 @@ if !outName.end_with? ".tex"
 	outName = outName + ".tex"
 else
 	shortName = outName.gsub(".tex", "")
-end
-
-class DiracTest
-	def initialize(info, expr, line_length: 0, lhs: nil)
-		@info = if !info.nil?
-					info
-				else
-					""
-				end 
-
-		@expr = expr
-
-		@line_length = line_length
-		if @line_length.nil?
-			@line_length = 0
-		end 
-
-		@lhs = lhs
-	end
-
-	def expr
-		@expr
-	end
-
-	def line_length
-		@line_length
-	end
-
-	def cmd(executable)
-		res = "#{executable} -e \"#{expr}\""
-		if @line_length > 0
-			res += " -l #{line_length}"
-		end
-
-		return res
-	end
-
-	def info
-		@info
-	end
-
-	def result_latex(executable)
-		command = self.cmd(executable)
-
-		processed, ex_code = Open3.capture2(command)
-		if ex_code != 0
-			processed = "\\verb|#{processed.rstrip}|"
-		end 
-
-		eqn = if !@lhs.nil?
-				@lhs
-			  else
-			  	@expr
-			  end
-
-		eqn = "#{eqn} = #{processed.rstrip}"
-		if (@line_length > 0) && (ex_code == 0)
-			eqn = "\\begin{split}\n#{eqn}\n\\end{split}"
-		end
-		eqn = "\\begin{equation}\n#{eqn}\n\\end{equation}"
-		return eqn 
-	end
 end
 
 TESTS = [
@@ -200,10 +138,10 @@ begin
 	output.write(PREAMBLE)
 
 	for item in TESTS
-		test_case = DiracTest.new(item[:info], 
-					item[:expr], 
-					line_length: item[:line_length],
-					lhs: item[:lhs])
+		test_case = DiracInvocation.new(item[:info], 
+						item[:expr], 
+						line_length: item[:line_length],
+						lhs: item[:lhs])
 		res = test_case.result_latex(dirac)
 		output.write("#{test_case.info}\n#{res}\n\n")			 
 	end
