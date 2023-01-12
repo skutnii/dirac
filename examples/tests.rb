@@ -39,7 +39,12 @@ end
 
 class DiracTest
 	def initialize(info, expr, line_length: 0, lhs: nil)
-		@info = info 
+		@info = if !info.nil?
+					info
+				else
+					""
+				end 
+
 		@expr = expr
 
 		@line_length = line_length
@@ -114,6 +119,9 @@ TESTS = [
 	{:info => "Product of two gamma matrices", 
 			:expr => "\\gamma^\\mu\\gamma^\\nu"},
 
+	{:info => "Product $\\gamma$ and $\\sigma$", 
+			:expr => "\\gamma^\\lambda\\sigma^{\\mu\\nu}"},
+
 	{:info => "Product of $\\gamma$ and $\\gamma^5$", 
 			:expr => "\\gamma^\\mu\\gamma5",
 			:lhs => "\\gamma^\\mu\\gamma^5"},
@@ -168,6 +176,22 @@ TESTS = [
 	{:info => "Same as above in the reverse order",
 			:expr => "\\gamma5\\sigma^{\\lambda\\mu}",
 			:lhs => "\\gamma^5\\sigma^{\\lambda\\mu}"},
+
+	{:info => "$\\gamma^5$ and two $\\gamma$",
+			:expr => "\\gamma5\\gamma^\\mu\\gamma^\\nu",
+			:lhs => "\\gamma^5\\gamma^\\mu\\gamma^\\nu"},
+
+	{:info => "$\\gamma^5$, $\\gamma$, and $\\sigma$",
+			:expr => "\\gamma5\\gamma^\\lambda\\sigma^{\\mu\\nu}",
+			:lhs => "\\gamma^5\\gamma^\\lambda\\sigma^{\\mu\\nu}"},
+
+	{:info => "Two $\\gamma$ sandwiched with $\\gamma^5$",
+			:expr => "\\gamma5\\gamma^\\mu\\gamma5\\gamma^\\nu",
+			:lhs => "\\gamma^5\\gamma^\\mu\\gamma^5\\gamma^\\nu"},
+
+	{:info => "$\\gamma$ sandwiched between two $\\gamma^5$",
+			:expr => "\\gamma5\\gamma^\\mu\\gamma5",
+			:lhs => "\\gamma^5\\gamma^\\mu\\gamma^5"}
 ]
 
 output = File.open(outName, "w+")
