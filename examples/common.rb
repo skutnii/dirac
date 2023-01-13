@@ -23,10 +23,11 @@ class DiracInvocation
 
 		@expr = expr
 
-		@line_length = line_length
-		if @line_length.nil?
-			@line_length = 0
-		end 
+		@line_length = if !line_length.nil?
+					   		line_length
+					   else
+					   		0
+					   end 
 
 		@lhs = lhs
 		@mode = mode
