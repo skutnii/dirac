@@ -1,6 +1,8 @@
 /*
  * Gamma.hpp
  *
+ * Definitions and operations on expressions containing gamma-matrices
+ *
  *  Created on: Dec 21, 2022
  *      Author: skutnii
  */
@@ -21,6 +23,11 @@ namespace dirac {
 
 namespace algebra {
 
+/**
+ * Gamma ring basis consists of basis matrices:
+ * \gamma^\mu, \sigma^{\mu\nu}, and \gamma^5,
+ * and Lorentz-invariant symbols: metric, Kronecker and Levi-Civita
+ */
 struct GammaBasis {
 	GammaBasis() = default;
 
@@ -31,11 +38,18 @@ struct GammaBasis {
 	using NameSet = std::unordered_set<std::string>;
 	static const NameSet Elements;
 
+	/**
+	 * Returns true if the argument identifies one of basis elements,
+	 * false otherwise
+	 */
 	inline static bool allows(const std::string& id) {
 		return (LI::Basis::allows(id)
 				|| (Elements.find(id) != Elements.end()));
 	}
 
+	/**
+	 * Maximum number of indices that a basis element can have
+	 */
 	inline static size_t maxIndexCount(const std::string& id) {
 		if (LI::Basis::allows(id))
 			return LI::Basis::maxIndexCount(id);
@@ -50,20 +64,55 @@ struct GammaBasis {
 	}
 };
 
+/**
+ * Basis element of the gamma ring
+ */
 using GammaTensor =
 		TensorBase<std::string, GammaBasis, IndexId>;
 
+/**
+ * Gamma-ring element, that is, a polynomial of
+ * Dirac matrices and Lorentz-invariant symbols
+ * with complex coefficients.
+ */
 template<typename Scalar>
 using GammaPolynomial = Polynomial<Complex<Scalar>, GammaTensor>;
 
+/**
+ * Canonical gamma-expression is a linear combination
+ * of the following matrices: 1, \gamma^\mu, \sigma^{\mu\nu},
+ * \gamma^5\gamma^\mu, \gamma^5 with Lorentz-invariant coefficients
+ */
 template<typename Scalar>
 struct CanonicalExpr {
+	/**
+	 * Coefficients at basis matrices:
+	 * - coeffs(0) - at 1;
+	 * - coeffs(1) - at \gamma^\mu;
+	 * - coeffs(2) - at \sigma^{\mu\nu};
+	 * - coeffs(3) - at \gamma^5\gamma^\mu;
+	 * - coeffs(4) - at \gamma^5.
+	 */
 	GammaVector<Scalar> coeffs;
 
+	/**
+	 * Lorentz index of \gamma basis matrix
+	 */
 	TensorIndex vectorIndex;
+
+	/**
+	 * Lorentz indices of \sigma basis matrix
+	 */
 	std::pair<TensorIndex, TensorIndex> tensorIndices;
+
+	/**
+	 * Lorentz index of \gamma^5\gamma basis matrix
+	 */
 	TensorIndex pseudoVectorIndex;
 
+	/**
+	 * Constructs a canonical exprression from basis matrix indices
+	 */
 	CanonicalExpr(const TensorIndex& vector,
 			const TensorIndex& tensor1,
 			const TensorIndex& tensor2,
@@ -89,6 +138,11 @@ struct CanonicalExpr {
 	void applySymmetry();
 };
 
+//----------------------------------------------------------------------
+
+/**
+ * Promote a gamma-basis element to a polynomial
+ */
 template<typename Scalar>
 GammaPolynomial<Scalar> toPolynomial(const GammaTensor& t) {
 	typename GammaPolynomial<Scalar>::Term term;
@@ -101,6 +155,12 @@ GammaPolynomial<Scalar> toPolynomial(const GammaTensor& t) {
 	return res;
 }
 
+//----------------------------------------------------------------------
+
+/**
+ * Transforms an arbitrary gamma polynomial to canonical form
+ * by expanding products of \gamma matrices.
+ */
 template<typename Scalar>
 CanonicalExpr<Scalar> reduceGamma(const GammaPolynomial<Scalar>& p) {
 	using namespace algebra;
@@ -165,6 +225,9 @@ CanonicalExpr<Scalar> reduceGamma(const GammaPolynomial<Scalar>& p) {
 	return expr;
 }
 
+//----------------------------------------------------------------------
+
+//Gamma polynomial sum
 template<typename Scalar>
 inline GammaPolynomial<Scalar>
 operator+(const GammaPolynomial<Scalar>& p1,
@@ -173,6 +236,9 @@ operator+(const GammaPolynomial<Scalar>& p1,
 			Complex<Scalar>, GammaTensor>(p1, p2);
 }
 
+//----------------------------------------------------------------------
+
+//Gamma polynomial difference
 template<typename Scalar>
 inline GammaPolynomial<Scalar>
 operator-(const GammaPolynomial<Scalar>& p1,
@@ -181,6 +247,9 @@ operator-(const GammaPolynomial<Scalar>& p1,
 			Complex<Scalar>, GammaTensor>(p1, p2);
 }
 
+//----------------------------------------------------------------------
+
+//Gamma polynomial negation (unary minus) operator
 template<typename Scalar>
 inline GammaPolynomial<Scalar>
 operator-(const GammaPolynomial<Scalar>& p) {
@@ -188,6 +257,9 @@ operator-(const GammaPolynomial<Scalar>& p) {
 			Complex<Scalar>, GammaTensor>(p);
 }
 
+//----------------------------------------------------------------------
+
+//Product of gamma polynomials
 template<typename Scalar>
 inline GammaPolynomial<Scalar>
 operator*(const GammaPolynomial<Scalar>& p1,
@@ -196,6 +268,9 @@ operator*(const GammaPolynomial<Scalar>& p1,
 			Complex<Scalar>, GammaTensor>(p1, p2);
 }
 
+//----------------------------------------------------------------------
+
+//left multiplication of a gamma polynomial by a complex number
 template<typename Scalar>
 inline GammaPolynomial<Scalar>
 operator*(const Complex<Scalar>& c,
@@ -204,6 +279,9 @@ operator*(const Complex<Scalar>& c,
 			Complex<Scalar>, GammaTensor>(c, p);
 }
 
+//----------------------------------------------------------------------
+
+//Right multiplication of a gamma polynomial by a complex number
 template<typename Scalar>
 inline GammaPolynomial<Scalar>
 operator*(const GammaPolynomial<Scalar>& p,
@@ -211,6 +289,8 @@ operator*(const GammaPolynomial<Scalar>& p,
 	return prod<GammaPolynomial<Scalar>,
 			Complex<Scalar>, GammaTensor>(p, c);
 }
+
+//----------------------------------------------------------------------
 
 template<typename Scalar>
 void CanonicalExpr<Scalar>::applySymmetry() {

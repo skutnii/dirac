@@ -1,5 +1,7 @@
 /*
- * compile.h
+ * Compiler.hpp
+ *
+ * String compiler class
  *
  *  Created on: Dec 12, 2022
  *      Author: skutnii
@@ -22,9 +24,10 @@ namespace dirac {
 template<typename Number>
 using Executable = std::list<Token<Number>>;
 
-/*
+/**
  * Compiler transforms a sequence of tokens in natural order
  * into reverse Polish (postfix) order suitable for computation.
+ * Implements a version of shunting yard algorithm.
  */
 template<typename Number>
 class Compiler {
@@ -38,6 +41,9 @@ public:
 		return ((_state == Empty) || (_state == LBrace));
 	}
 
+	/**
+	 * Process a single token
+	 */
 	void pushToken(const Token<Number>& token) {
 		if (isOp(token))
 			pushOp(std::get<Op>(token));
@@ -45,6 +51,9 @@ public:
 			pushValue(token);
 	}
 
+	/**
+	 * Process an operation
+	 */
 	void pushOp(const Op& op);
 
 	/*
@@ -53,6 +62,9 @@ public:
 	 */
 	void popAll();
 
+	/**
+	 * Compile an input sequence
+	 */
 	template<InputSequence<Number> Input>
 	void compile(Input& input) {
 		while (std::optional<Token<Number>>
@@ -72,25 +84,36 @@ public:
 		Subscript = 4
 	};
 
+	/**
+	 * Returns argument presedence
+	 */
 	static Precedence precedence(const Op& op);
 
-	/*
+	/**
 	 * Executable code in reverse Polish (postfix) notation
 	 */
 	const Executable<Number>& opCode() const { return _body; }
 private:
+	/**
+	 * Raise an error on inconsistent state
+	 */
 	void internalError() {
 		throw std::runtime_error{
 			"Internal error: inconsistent compiler state." };
 	}
 
+	/**
+	 * Process a value
+	 */
 	void pushValue(const Token<Number>& valueToken);
 
-	//Unconditionally push an operation
+	/**
+	 * Unconditionally push an operation
+	 */
 	void doPush(const Op& op);
 
 	/**
-	 * Flushes operations from the stack until its argument
+	 * Flush operations from the stack until its argument
 	 * evaluates to true or throws an exception.
 	 * Exceptions are not handled.
 	 */
@@ -110,6 +133,8 @@ private:
 	std::optional<Token<Number>> _lastToken;
 };
 
+//----------------------------------------------------------------------
+
 template<typename Number>
 void Compiler<Number>::pushValue(const Token<Number>& valueToken) {
 	/*
@@ -124,6 +149,8 @@ void Compiler<Number>::pushValue(const Token<Number>& valueToken) {
 	_lastToken = valueToken;
 	_state = Value;
 }
+
+//----------------------------------------------------------------------
 
 template<typename Number>
 void Compiler<Number>::pushOp(const Op &op) {
@@ -179,7 +206,7 @@ void Compiler<Number>::pushOp(const Op &op) {
 	 */
 	if (op == Op::LBrace) {
 		/*
-		 * Opening bracket after a value or closing bracket
+		 * Opening bracket after a value or a closing bracket
 		 * is promoted to list concatenation
 		 * \a{ -> \a & {.
 		 * Also }{ -> } & {.
@@ -223,6 +250,8 @@ void Compiler<Number>::pushOp(const Op &op) {
 	doPush(op);
 }
 
+//----------------------------------------------------------------------
+
 template<typename Number>
 typename Compiler<Number>::Precedence
 Compiler<Number>::precedence(const Op& op) {
@@ -247,6 +276,8 @@ Compiler<Number>::precedence(const Op& op) {
 	return Nop;
 }
 
+//----------------------------------------------------------------------
+
 template<typename Number>
 void Compiler<Number>::doPush(const Op& op) {
 	_opStack.push_front(op);
@@ -260,6 +291,8 @@ void Compiler<Number>::doPush(const Op& op) {
 		_state = Operator;
 }
 
+//----------------------------------------------------------------------
+
 template<typename Number>
 void Compiler<Number>::popUntil(const std::function<bool()> &cond) {
 	if (cond())
@@ -272,6 +305,8 @@ void Compiler<Number>::popUntil(const std::function<bool()> &cond) {
 		_body.push_back(topOp);
 	} while(!cond());
 }
+
+//----------------------------------------------------------------------
 
 template<typename Number>
 void Compiler<Number>::popAll() {
@@ -297,6 +332,8 @@ void Compiler<Number>::popAll() {
 		});
 }
 
-}
+//----------------------------------------------------------------------
+
+} /* namespace dirac */
 
 #endif /* SRC_COMPILER_HPP_ */

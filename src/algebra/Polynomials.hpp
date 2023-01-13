@@ -1,6 +1,8 @@
 /*
  * Polynomials.hpp
  *
+ * Abstract polynomial algebra.
+ *
  *  Created on: Dec 13, 2022
  *      Author: skutnii
  */
@@ -19,6 +21,9 @@ namespace dirac {
 
 namespace algebra {
 
+/**
+ * Requirements for a polynomial coefficient
+ */
 template<typename T>
 concept ScalarType = requires(T a, T b) {
 	a + b;
@@ -27,21 +32,34 @@ concept ScalarType = requires(T a, T b) {
 	-a;
 };
 
+/**
+ * Abstract polynomial type
+ */
 template<ScalarType Coeff, typename Factor>
 struct Polynomial {
+	/**
+	 * Polynomial term structure
+	 */
 	struct Term {
 		Coeff coeff;
 		std::vector<Factor> factors;
 
+		/**
+		 * Terms multiplication
+		 */
 		Term operator*(const Term& other) const {
 			Term prod;
 			prod.coeff = coeff * other.coeff;
-			prod.factors.insert(prod.factors.end(), factors.begin(), factors.end());
+			prod.factors.insert(prod.factors.end(),
+						factors.begin(), factors.end());
 			prod.factors.insert(prod.factors.end(),
 					other.factors.begin(), other.factors.end());
 			return prod;
 		}
 
+		/**
+		 * Term negation
+		 */
 		Term operator-() const {
 			Term neg;
 			neg.coeff = -coeff;
@@ -61,7 +79,8 @@ struct Polynomial {
 			factors.push_back(f);
 		}
 
-		Term(const Coeff& c, const Factor& f) : coeff{ c }, factors{ f } {}
+		Term(const Coeff& c, const Factor& f) :
+						coeff{ c }, factors{ f } {}
 	};
 
 	using Terms = std::vector<Term>;
@@ -76,14 +95,16 @@ struct Polynomial {
 	virtual ~Polynomial() = default;
 
 	/**
-	 * Polynomial normalization method.
+	 * Polynomial canonicalization method.
 	 * Default implementation does nothing.
-	 * Specialize for specific polynomial types.
+	 * Override for specific polynomial types.
 	 */
 	virtual void canonicalize() {
 	}
 
 };
+
+//----------------------------------------------------------------------
 
 /**
  * Mutating polynomial addition ("+=" operator)
@@ -96,6 +117,8 @@ P& add(P& p1, const P& p2) {
 	return p1;
 }
 
+//----------------------------------------------------------------------
+
 /**
  * Polynomial addition ("+" operator)
  */
@@ -105,6 +128,8 @@ P sum(const P& p1, const P& p2) {
 	P sum{ p1 };
 	return add<P, CoeffType, Factor>(sum, p2);
 }
+
+//----------------------------------------------------------------------
 
 /**
  * Mutating polynomial subtraction ("-=" operator)
@@ -126,6 +151,8 @@ P& sub(P& p1, const P& p2) {
 	return p1;
 }
 
+//----------------------------------------------------------------------
+
 /**
  * Polynomial subtraction
  */
@@ -135,6 +162,8 @@ P diff(const P& p1, const P& p2) {
 	P diff{ p1 };
 	return sub<P, CoeffType, Factor>(diff, p2);
 }
+
+//----------------------------------------------------------------------
 
 /**
  * Polynomial negation
@@ -155,6 +184,8 @@ P negate(const P& p) {
 
 	return res;
 }
+
+//----------------------------------------------------------------------
 
 /**
  * Polynomial multiplication
@@ -179,6 +210,8 @@ P prod(const P& p1, const P& p2) {
 	return prod;
 }
 
+//----------------------------------------------------------------------
+
 /**
  * Left multiplication of a polynomial by number
  */
@@ -201,6 +234,8 @@ P prod(const Coeff& c, const P& p) {
 
 	return prod;
 }
+
+//----------------------------------------------------------------------
 
 /**
  * Right multiplication of a polynomial by number.
@@ -226,8 +261,8 @@ P prod(const P& p, const Coeff& c) {
 	return prod;
 }
 
-}
+} /*namespace algebra*/
 
-}
+} /*namespce dirac*/
 
 #endif /* SRC_POLYNOMIALS_HPP_ */

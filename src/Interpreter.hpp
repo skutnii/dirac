@@ -1,5 +1,7 @@
 /*
- * Processor.hpp
+ * Interperter.hpp
+ *
+ * Executable interpreter class
  *
  *  Created on: Dec 19, 2022
  *      Author: skutnii
@@ -24,13 +26,29 @@ namespace dirac {
 
 namespace symbolic {
 
+/**
+ * Interpreter computes an expression
+ * in inverse Polish (postfix) notation.
+ */
 template<typename Scalar>
 class Interpreter {
 public:
-
+	/**
+	 * Execute a single token.
+	 * A value token is pushed to internal stack.
+	 * An operation takes argument(s) from the stack,
+	 * evaluates the result and pushes it to the stack.
+	 */
 	void exec(const Token<Scalar>& token);
+
+	/**
+	 * Execute an operation
+	 */
 	void exec(const Op& op);
 
+	/**
+	 * Execute a sequence of tokens
+	 */
 	template<std::input_iterator IToken, std::sentinel_for<IToken> IEnd>
 	void exec(const IToken& begin, const IEnd& end) {
 		for (IToken it = begin; it != end; ++it)
@@ -39,6 +57,9 @@ public:
 
 	using OpStack = std::deque<OpList<Scalar>>;
 
+	/**
+	 * Returns a reference to the internal stack
+	 */
 	const OpStack& stack() const {
 		return _stack;
 	}
@@ -55,6 +76,8 @@ private:
 	OpStack _stack;
 };
 
+//----------------------------------------------------------------------
+
 template<typename Scalar>
 void Interpreter<Scalar>::exec(const Token<Scalar>& token) {
 	if (std::holds_alternative<Op>(token))
@@ -66,6 +89,8 @@ void Interpreter<Scalar>::exec(const Token<Scalar>& token) {
 	} else if (std::holds_alternative<Literal>(token))
 		_stack.push_front(OpList<Scalar>{ std::get<Literal>(token) });
 }
+
+//----------------------------------------------------------------------
 
 template<typename Scalar>
 void Interpreter<Scalar>::exec(const Op& op) {
@@ -113,6 +138,8 @@ void Interpreter<Scalar>::exec(const Op& op) {
 			"Unsupported operation: " + op.str() };
 }
 
+//----------------------------------------------------------------------
+
 template<typename Scalar>
 void Interpreter<Scalar>::performBinary(const BinaryOp &binOp) {
 	if (_stack.size() < 2)
@@ -127,6 +154,8 @@ void Interpreter<Scalar>::performBinary(const BinaryOp &binOp) {
 	_stack.push_front(res);
 }
 
+//----------------------------------------------------------------------
+
 template<typename Scalar>
 void Interpreter<Scalar>::performUnary(const UnaryOp &unaryOp) {
 	if (_stack.empty())
@@ -138,7 +167,9 @@ void Interpreter<Scalar>::performUnary(const UnaryOp &unaryOp) {
 	_stack.push_front(res);
 }
 
-}
+//----------------------------------------------------------------------
+
+} /* namespace symbolic */
 
 } /* namespace dirac */
 

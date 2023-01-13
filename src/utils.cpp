@@ -1,6 +1,8 @@
 /*
  * utils.cpp
  *
+ * Utility function definitions
+ *
  *  Created on: Jan 4, 2023
  *      Author: skutnii
  */

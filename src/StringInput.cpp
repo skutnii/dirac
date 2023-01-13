@@ -12,6 +12,8 @@
 
 namespace dirac {
 
+//----------------------------------------------------------------------
+
 template<>
 std::optional<double>
 StringInput<double>::nextNumber() {
@@ -26,6 +28,8 @@ StringInput<double>::nextNumber() {
 	skipTo(iter);
 	return tmp.empty() ? std::optional<double>{} : std::stod(tmp);
 }
+
+//----------------------------------------------------------------------
 
 template<>
 std::optional<algebra::Rational>

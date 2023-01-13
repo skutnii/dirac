@@ -1,6 +1,8 @@
 /*
  * ExprPrinter.cpp
  *
+ * Constant definitions and template specializations
+ *
  *  Created on: Dec 22, 2022
  *      Author: skutnii
  */
@@ -24,6 +26,8 @@ const std::string rightSquareBracket{ "\\right]" };
 const std::string leftBracket{ "\\left(" };
 const std::string rightBracket{ "\\right)" };
 
+//----------------------------------------------------------------------
+
 template<>
 std::string
 ExprPrinter<algebra::Rational>::latexify(const algebra::Rational& r) {
@@ -37,8 +41,11 @@ ExprPrinter<algebra::Rational>::latexify(const algebra::Rational& r) {
 	return ss.str();
 }
 
+//----------------------------------------------------------------------
+
 template<>
-std::string ExprPrinter<Rational>::latexify(const Complex<Rational>& c) {
+std::string
+ExprPrinter<Rational>::latexify(const Complex<Rational>& c) {
 	bool hasReal = (c.real() != 0);
 	bool hasImag = (c.imag() != 0);
 

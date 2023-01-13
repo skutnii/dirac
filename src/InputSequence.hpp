@@ -1,5 +1,5 @@
 /*
- * InputSequence.h
+ * InputSequence.hpp
  *
  *  Created on: Dec 13, 2022
  *      Author: skutnii
@@ -13,6 +13,9 @@
 
 namespace dirac {
 
+/**
+ * InputSequence requirement
+ */
 template<class T, typename Number>
 concept InputSequence = requires(T a) {
 	{ a.nextToken() } -> std::same_as<std::optional<Token<Number>>>;

@@ -7,6 +7,9 @@
 
 #include "App.hpp"
 
+/**
+ * Dirac executable entry point
+ */
 int main(int argc, char **argv) {
 	return dirac::App{ argc, argv }.run();
 }

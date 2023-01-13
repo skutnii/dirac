@@ -1,5 +1,7 @@
 /*
- * Operand.hpp
+ * Operations.hpp
+ *
+ * Operations on symbolic expressions
  *
  *  Created on: Dec 21, 2022
  *      Author: skutnii
@@ -18,6 +20,10 @@ namespace dirac {
 
 namespace symbolic {
 
+//----------------------------------------------------------------------
+
+//Typedefs
+
 using Tensor = algebra::GammaTensor;
 
 template<typename Scalar>
@@ -35,11 +41,29 @@ using Operand = std::variant<Literal,
 template<typename Scalar>
 using OpList = std::list<Operand<Scalar> >;
 
+//----------------------------------------------------------------------
+
+/**
+ * Imaginary unit representation
+ */
 extern const Literal I;
 
+//----------------------------------------------------------------------
+
+/**
+ * Converts a list of operands to a product.
+ * E.g. abcd -> a * b * c * d
+ */
 template<typename Scalar>
 OpList<Scalar> toProduct(const OpList<Scalar>& ops);
 
+//----------------------------------------------------------------------
+
+/**
+ * Literal resolution.
+ * Literals can be resolved either to gamma-ring elements
+ * or imaginary unit.
+ */
 template<typename Scalar>
 Operand<Scalar> resolve(const Literal& literal) {
 	if (literal == I)
@@ -48,6 +72,12 @@ Operand<Scalar> resolve(const Literal& literal) {
 	return Tensor::create(literal);
 }
 
+//----------------------------------------------------------------------
+
+/**
+ * Gets a polynomial from the argument if possible
+ * and throws an exception otherwise.
+ */
 template<typename Scalar>
 GammaPolynomial<Scalar> getPoly(const Operand<Scalar>& op) {
 	return std::holds_alternative<Tensor>(op) ?
@@ -55,10 +85,19 @@ GammaPolynomial<Scalar> getPoly(const Operand<Scalar>& op) {
 				: std::get<GammaPolynomial<Scalar>>(op);
 }
 
+//----------------------------------------------------------------------
+
 template<typename Scalar>
 using BinaryOp = std::function<Operand<Scalar> (const Operand<Scalar>&,
 										const Operand<Scalar>&)>;
 
+//----------------------------------------------------------------------
+
+/**
+ * Performs an arithmetic binary operation on the arguments.
+ * Useful because list unwrapping code
+ * is common to all binary operations.
+ */
 template<typename Scalar>
 OpList<Scalar> arithmeticBinary(const OpList<Scalar>& first,
 		const OpList<Scalar>& second, BinaryOp<Scalar> op)  {
@@ -78,6 +117,11 @@ OpList<Scalar> arithmeticBinary(const OpList<Scalar>& first,
 	return res;
 }
 
+//----------------------------------------------------------------------
+
+/**
+ * Addition
+ */
 template<typename Scalar>
 Operand<Scalar> sum(const Operand<Scalar>& op1,
 						const Operand<Scalar>& op2) {
@@ -102,6 +146,11 @@ Operand<Scalar> sum(const Operand<Scalar>& op1,
 	return getPoly<Scalar>(op1) + getPoly<Scalar>(op2);
 }
 
+//----------------------------------------------------------------------
+
+/**
+ * List addition
+ */
 template<typename Scalar>
 inline OpList<Scalar> sum(const OpList<Scalar>& first,
 							const OpList<Scalar>& second) {
@@ -112,6 +161,11 @@ inline OpList<Scalar> sum(const OpList<Scalar>& first,
 			});
 }
 
+//----------------------------------------------------------------------
+
+/**
+ * Subtraction
+ */
 template<typename Scalar>
 Operand<Scalar> diff(const Operand<Scalar>& op1,
 						const Operand<Scalar>& op2)  {
@@ -134,6 +188,11 @@ Operand<Scalar> diff(const Operand<Scalar>& op1,
 	return getPoly<Scalar>(op1) - getPoly<Scalar>(op2);
 }
 
+//----------------------------------------------------------------------
+
+/**
+ * List subtraction
+ */
 template<typename Scalar>
 inline OpList<Scalar> diff(const OpList<Scalar>& first,
 							const OpList<Scalar>& second) {
@@ -144,6 +203,11 @@ inline OpList<Scalar> diff(const OpList<Scalar>& first,
 			});
 }
 
+//----------------------------------------------------------------------
+
+/**
+ * Negation
+ */
 template<typename Scalar>
 Operand<Scalar> neg(const Operand<Scalar>& arg) {
 	if (std::holds_alternative<Literal>(arg))
@@ -155,6 +219,11 @@ Operand<Scalar> neg(const Operand<Scalar>& arg) {
 	return -getPoly<Scalar>(arg);
 }
 
+//----------------------------------------------------------------------
+
+/**
+ * List negation
+ */
 template<typename Scalar>
 OpList<Scalar> neg(const OpList<Scalar>& arg) {
 	if (arg.empty())
@@ -168,6 +237,11 @@ OpList<Scalar> neg(const OpList<Scalar>& arg) {
 	return res;
 }
 
+//----------------------------------------------------------------------
+
+/**
+ * Multiplication
+ */
 template<typename Scalar>
 Operand<Scalar> prod(const Operand<Scalar>& op1,
 		const Operand<Scalar>& op2) {
@@ -195,6 +269,11 @@ Operand<Scalar> prod(const Operand<Scalar>& op1,
 	return getPoly<Scalar>(op1) * getPoly<Scalar>(op2);
 }
 
+//----------------------------------------------------------------------
+
+/**
+ * List multiplication
+ */
 template<typename Scalar>
 inline OpList<Scalar> prod(const OpList<Scalar>& first,
 								const OpList<Scalar>& second) {
@@ -205,6 +284,12 @@ inline OpList<Scalar> prod(const OpList<Scalar>& first,
 			});
 }
 
+//----------------------------------------------------------------------
+
+/**
+ * Division.
+ * Second operand of division is restricted to numbers.
+ */
 template<typename Scalar>
 Operand<Scalar> div(const Operand<Scalar>& op1,
 						const Operand<Scalar>& op2) {
@@ -227,6 +312,11 @@ Operand<Scalar> div(const Operand<Scalar>& op1,
 			( algebra::one<Scalar>() / std::get<Complex<Scalar>>(op2));
 }
 
+//----------------------------------------------------------------------
+
+/**
+ * List division
+ */
 template<typename Scalar>
 inline OpList<Scalar> div(const OpList<Scalar>& first,
 							const OpList<Scalar>& second) {
@@ -238,6 +328,12 @@ inline OpList<Scalar> div(const OpList<Scalar>& first,
 
 }
 
+//----------------------------------------------------------------------
+
+/**
+ * If possible, converts the argument to a tensor;
+ * throws an exception otherwise.
+ */
 template<typename Scalar>
 Tensor getTensor(const Operand<Scalar>& op) {
 	if (std::holds_alternative<Tensor>(op))
@@ -250,8 +346,16 @@ Tensor getTensor(const Operand<Scalar>& op) {
 	return Tensor::create(std::get<Literal>(op));
 }
 
+//----------------------------------------------------------------------
+
 using TensorIndices = algebra::TensorIndices;
 
+//----------------------------------------------------------------------
+
+/**
+ * Coinverts a list of literals to a list of indices.
+ * Used by subscript and superscript operations
+ */
 template<typename Scalar>
 TensorIndices toIndices(const OpList<Scalar>& list, bool isUpper) {
 	TensorIndices indices;
@@ -267,6 +371,12 @@ TensorIndices toIndices(const OpList<Scalar>& list, bool isUpper) {
 	return indices;
 }
 
+//----------------------------------------------------------------------
+
+/**
+ * Subscript adds lower indices to a literal or a tensor,
+ * resulting in a tensor
+ */
 template<typename Scalar>
 OpList<Scalar> subscript(const OpList<Scalar>& head,
 							const OpList<Scalar>& indices) {
@@ -280,6 +390,12 @@ OpList<Scalar> subscript(const OpList<Scalar>& head,
 	return res;
 }
 
+//----------------------------------------------------------------------
+
+/**
+ * Superscript adds upper indices to a literal or a tensor,
+ * resulting in a tensor
+ */
 template<typename Scalar>
 OpList<Scalar> superscript(const OpList<Scalar>& head,
 							const OpList<Scalar>& indices) {
@@ -293,6 +409,11 @@ OpList<Scalar> superscript(const OpList<Scalar>& head,
 	return res;
 }
 
+//----------------------------------------------------------------------
+
+/**
+ * List concatenation
+ */
 template<typename Scalar>
 inline OpList<Scalar>
 join(const OpList<Scalar>& list1, const OpList<Scalar>& list2) {
@@ -301,6 +422,8 @@ join(const OpList<Scalar>& list1, const OpList<Scalar>& list2) {
 	res.insert(res.end(), list2.begin(), list2.end());
 	return res;
 }
+
+//----------------------------------------------------------------------
 
 template<typename Scalar>
 OpList<Scalar> toProduct(const OpList<Scalar>& ops) {
@@ -316,9 +439,17 @@ OpList<Scalar> toProduct(const OpList<Scalar>& ops) {
 	return res;
 }
 
+//----------------------------------------------------------------------
+
 template<typename Scalar>
 using CanonicalExpr = algebra::CanonicalExpr<Scalar>;
 
+//----------------------------------------------------------------------
+
+/**
+ * If the argument is a number or convertible to a gamma polynomial,
+ * converts it to canonical form; throws an exception otherwise.
+ */
 template<typename Scalar>
 CanonicalExpr<Scalar> eval(const Operand<Scalar>& value) {
 	if (std::holds_alternative<Complex<Scalar>>(value)) {
@@ -332,6 +463,13 @@ CanonicalExpr<Scalar> eval(const Operand<Scalar>& value) {
 	return algebra::reduceGamma<Scalar>(poly);
 }
 
+//----------------------------------------------------------------------
+
+/**
+ * If the list contains a single value,
+ * tries evaluating the value's canonical form;
+ * throws an exception otherwise.
+ */
 template<typename Scalar>
 CanonicalExpr<Scalar> eval(const OpList<Scalar>& ops) {
 	if (ops.empty())
@@ -343,9 +481,11 @@ CanonicalExpr<Scalar> eval(const OpList<Scalar>& ops) {
 	return eval<Scalar>(toProduct<Scalar>(ops));
 }
 
-}
+//----------------------------------------------------------------------
 
-}
+} /* namespace symbolic */
+
+} /* namespace dirac */
 
 
 

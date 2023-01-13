@@ -1,6 +1,8 @@
 /*
  * utils.hpp
  *
+ * Utility functions
+ *
  *  Created on: Jan 4, 2023
  *      Author: skutnii
  */

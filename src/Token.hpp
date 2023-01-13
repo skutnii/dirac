@@ -1,6 +1,13 @@
 /*
  * Token.h
  *
+ * Expression token definition.
+ * Token is the basic unit of a dirac expression:
+ * - a number;
+ * - a literal;
+ * - an operation;
+ * - a bracket.
+ *
  *  Created on: Dec 12, 2022
  *      Author: skutnii
  */
@@ -15,6 +22,9 @@
 
 namespace dirac {
 
+/**
+ * Operations. Brackets are considered operations as well
+ */
 class Op {
 public:
 	static const Op Nop; //Not an operation
@@ -32,6 +42,9 @@ public:
 	Op() = default;
 	Op(const Op& other) = default;
 
+	/**
+	 * Constructs an operation fro a symbol
+	 */
 	explicit Op(char c) {
 		switch (c) {
 		case '+':
@@ -50,10 +63,16 @@ public:
 		}
 	}
 
+	/**
+	 * Equality check
+	 */
 	bool operator==(const Op& other) const {
 		return (_repr == other._repr);
 	}
 
+	/**
+	 * String representation
+	 */
 	std::string str() const  {
 		if (*this == Nop)
 			return "NOP";
@@ -67,21 +86,46 @@ private:
 	char _repr = 0;
 };
 
+//----------------------------------------------------------------------
+
+/**
+ * Token printing
+ */
 inline std::ostream& operator<<(std::ostream& os, const Op& op) {
 	return (os << op.str());
 }
 
+//----------------------------------------------------------------------
 
+/**
+ * Literal definition
+ */
 using Literal = std::string;
 
+//----------------------------------------------------------------------
+
+/**
+ * Token definition
+ */
 template<typename Number>
 using Token = std::variant<Op, Number, Literal>;
 
+//----------------------------------------------------------------------
+
+/**
+ * Checks whether the argument represents an operation
+ */
 template<typename Number>
 inline bool isOp(const Token<Number>& token) {
 	return std::holds_alternative<Op>(token);
 }
 
+//----------------------------------------------------------------------
+
+/**
+ * Checks whether the argument represents a value
+ * (that is, not an operation)
+ */
 template<typename Number>
 inline bool isValue(const Token<Number>& token) {
 	return !isOp(token);

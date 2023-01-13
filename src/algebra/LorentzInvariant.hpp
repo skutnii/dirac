@@ -26,6 +26,10 @@ namespace algebra {
 //Lorentz invariant tensors namespace
 namespace LI {
 
+/**
+ * Basis of Lorentz-invariant (pseudo)-tensor ring.
+ * Consists of metric, Kronecker delta, and Levi-Civita symbol.
+ */
 struct Basis {
 	Basis() = default;
 
@@ -36,10 +40,17 @@ struct Basis {
 	using NameSet = std::unordered_set<std::string>;
 	static const NameSet Elements;
 
+	/**
+	 * returns true if the argument identifies one of basis elements,
+	 * false otherwise
+	 */
 	inline static bool allows(const std::string& id) {
 		return (Elements.find(id) != Elements.end());
 	}
 
+	/**
+	 * Maximum number of indices a basis element can have
+	 */
 	inline static size_t maxIndexCount(const std::string& id) {
 		if (id == epsilon)
 			return 4;
@@ -53,61 +64,92 @@ struct Basis {
 
 };
 
+/**
+ * Basis Lorentz-invariant (pseudo)-tensor ring element
+ */
 using Tensor = TensorBase<std::string, Basis, IndexId>;
 
+/**
+ * Lorentz-invariant (pseudo)-tensor polynomial type
+ */
 template<typename Scalar>
 struct TensorPolynomial : public Polynomial<Complex<Scalar>, Tensor> {
 	using Coeff = Complex<Scalar>;
 	using Base = Polynomial<Complex<Scalar>, Tensor>;
 	using Term = typename Base::Term;
 
-	TensorIndices indices;
-
+	/**
+	 * Addition operator
+	 */
 	TensorPolynomial<Scalar>
 	operator+(const TensorPolynomial<Scalar>& other) const {
 		return sum<TensorPolynomial<Scalar>,
 					Coeff, Tensor>(*this, other);
 	}
 
+	/**
+	 * Subtraction operator
+	 */
 	TensorPolynomial<Scalar>
 	operator-(const TensorPolynomial<Scalar>& other) const {
 		return diff<TensorPolynomial<Scalar>,
 					Coeff, Tensor>(*this, other);
 	}
 
+	/**
+	 * Multiplication operator
+	 */
 	TensorPolynomial<Scalar>
 	operator*(const TensorPolynomial<Scalar>& other) const {
 		return prod<TensorPolynomial<Scalar>,
 					Coeff, Tensor>(*this, other);
 	}
 
+	/**
+	 * Right multiplication by a complex coefficient
+	 */
 	TensorPolynomial<Scalar> operator*(const Coeff& c) const {
 		return prod<TensorPolynomial<Scalar>,
 					Coeff, Tensor>(*this, c);
 	}
 
+	/**
+	 * Negation (unary minus) operator
+	 */
 	TensorPolynomial<Scalar> operator-() const {
 		return negate<TensorPolynomial<Scalar>, Coeff, Tensor>(*this);
 	}
 
+	/**
+	 * Mutating addition
+	 */
 	TensorPolynomial<Scalar>& operator+=(
 			const TensorPolynomial<Scalar>& other) {
 		return add<TensorPolynomial<Scalar>,
 					Coeff, Tensor>(*this, other);
 	}
 
+	/**
+	 * Mutating subtraction
+	 */
 	TensorPolynomial<Scalar>& operator-=(
 			const TensorPolynomial<Scalar>& other) {
 		return sub<TensorPolynomial<Scalar>,
 					Coeff, Tensor>(*this, other);
 	}
 
+	/**
+	 * Mutating multiplication
+	 */
 	TensorPolynomial<Scalar>& operator*=(
 			const TensorPolynomial<Scalar>& other) {
 		this->terms = (*this * other).terms;
 		return *this;
 	}
 
+	/**
+	 * Mutating right multiplication by a basis (pseudo)-tensor
+	 */
 	TensorPolynomial<Scalar>& operator*=(const Tensor& t) {
 		for (Term& term : this->terms)
 			term.factors.push_back(t);
@@ -115,6 +157,9 @@ struct TensorPolynomial : public Polynomial<Complex<Scalar>, Tensor> {
 		return *this;
 	}
 
+	/**
+	 * Mutating right multiplication by a complex number
+	 */
 	TensorPolynomial<Scalar>& operator*=(const Coeff& c) {
 		for (Term& term : this->terms)
 			term.coeff = term.coeff * c;
@@ -126,25 +171,47 @@ struct TensorPolynomial : public Polynomial<Complex<Scalar>, Tensor> {
 	TensorPolynomial(const TensorPolynomial<Scalar>& other) = default;
 	TensorPolynomial(TensorPolynomial<Scalar>&& other) = default;
 
+	/**
+	 * Assignment
+	 */
 	TensorPolynomial&
 	operator=(const TensorPolynomial<Scalar>& other) = default;
 
+	/**
+	 * Promote a complex number to a zer-rank tensor polynomial
+	 */
 	TensorPolynomial(const Coeff& c)
 		: Base{} {
 		if ((c.real() != 0) || (c.imag() != 0))
 			this->terms.emplace_back(c);
 	}
 
+	/**
+	 * Promote a scalar to a zero-rank tensor polynomial
+	 */
 	TensorPolynomial(const Scalar& s) :
 		TensorPolynomial{ Coeff{ s, static_cast<Scalar>(0) } } {}
 
+	/**
+	 * Promote a basis (pseudo)-tensor to a zero-rank tensor polynomial
+	 */
 	TensorPolynomial(const Tensor& t) : Base{} {
 		this->terms.emplace_back(one<Scalar>(), t);
-		indices = t.indices();
 	}
 
+	/**
+	 * Main canonicalization procedure.
+	 * Canonicalization is performed in three steps:
+	 * 1) powers of Levi-Civita symbol are expanded
+	 * 	  as products of metric and/or Kronecker symbols;
+	 * 2) all contractible Lorentz indices are contracted;
+	 * 3) all mergeable terms are merged
+	 */
 	void canonicalize() override;
 
+	/**
+	 * Check if the polynomial is zero
+	 */
 	bool isZero() const {
 		if (this->terms.empty())
 			return true;
@@ -156,17 +223,49 @@ struct TensorPolynomial : public Polynomial<Complex<Scalar>, Tensor> {
 		return true;
 	}
 
+	/**
+	 * Contract all contractible Lorentz indices in a term.
+	 * If the resulting term is zero (which happens if the coefficient
+	 * is zero or indices in a Levi-Civita symbol are contracted),
+	 * returns an empty optional.
+	 */
 	static std::optional<Term> contractIndices(const Term& src);
 
+	/**
+	 * If two term have same tensorial structure up to a permutation of
+	 * factors' indices returns the merger of the terms, that is,
+	 * the term with the same factors and the coefficient being sum or
+	 * difference of arguments' coefficients depending on whether
+	 * the Levi-Civita symbols in the arguments are related
+	 * by an even or odd index permutation.
+	 *
+	 * If the terms are not mergeable, returns an empty optional.
+	 */
 	static std::optional<Term> tryMerge(const Term& t1, const Term& t2);
 
+	/**
+	 * Expands products of Levi-Civita symbols into sums of products
+	 * of metric and/or Kronecker symbols. After the invocation of
+	 * this method, the polynomial is at most linear
+	 * in Levi-Civita symbol.
+	 */
 	void expandEpsilonPowers();
+
+	/**
+	 * Contracts all contractible Lorentz indices in each callee's term.
+	 */
 	void contractIndices();
 
 	using Merger =
 			std::function<
 				std::optional<Term> (const Term& t1, const Term& t2)>;
 
+	/**
+	 * Tries merging all mergeable terms using the user-provided
+	 * merger function. The function must return merging result
+	 * for two mergeable terms or an empty optional
+	 * if the terms are not mergeable
+	 */
 	void mergeTerms(Merger merger = tryMerge);
 };
 
@@ -178,6 +277,9 @@ struct TensorPolynomial : public Polynomial<Complex<Scalar>, Tensor> {
 
 namespace std {
 
+/**
+ * Hash specialization for Lorentz-invariant (pseudo)-tensors
+ */
 template<>
 struct hash<dirac::algebra::LI::Tensor> {
 	size_t operator()(const dirac::algebra::LI::Tensor& t) const {
@@ -198,6 +300,8 @@ namespace algebra {
 
 namespace LI {
 
+//----------------------------------------------------------------------
+
 /**
  * If both indices are either upper or lower, returns metric.
  * For a lower and an upper index, returns Kronecker delta.
@@ -209,6 +313,8 @@ eta(const TensorIndex& mu, const TensorIndex& nu)  {
 							Basis::eta : Basis::delta;
 	return Tensor::create(id, Tensor::Indices{ mu, nu });
 }
+
+//----------------------------------------------------------------------
 
 /**
  * Returns Levi-Civita symbol with specified indices.
@@ -222,11 +328,22 @@ TensorPolynomial<Scalar> epsilon(const TensorIndex& kappa,
 			 Tensor::Indices{ kappa, lambda, mu, nu });
 }
 
+//----------------------------------------------------------------------
+
+/**
+ * Constructs an empty (pseudo)-tensor polynomial
+ */
 template<typename Scalar>
 inline TensorPolynomial<Scalar> ZeroPoly() {
 	return TensorPolynomial<Scalar>();
 }
 
+//----------------------------------------------------------------------
+
+/**
+ * Left multiplication of a (pseudo)-tensor polynomial
+ * by a complex number
+ */
 template<typename Scalar>
 inline TensorPolynomial<Scalar>
 operator*(const Complex<Scalar>& c, const TensorPolynomial<Scalar>& p) {
@@ -234,6 +351,12 @@ operator*(const Complex<Scalar>& c, const TensorPolynomial<Scalar>& p) {
 				Complex<Scalar>, Tensor>(c, p);
 }
 
+//----------------------------------------------------------------------
+
+/**
+ * Mutating left multiplication of a (pseudo)-tensor polynomial
+ * by a basis (pseudo)-tensor
+ */
 template<typename Scalar>
 inline TensorPolynomial<Scalar>&
 operator*=(const Tensor& t, TensorPolynomial<Scalar>& p) {
@@ -242,6 +365,12 @@ operator*=(const Tensor& t, TensorPolynomial<Scalar>& p) {
 	return p;
 }
 
+//----------------------------------------------------------------------
+
+/**
+ * Mutating left multiplication of a (pseudo)-tensor polynomial
+ * by a complex number
+ */
 template<typename Scalar>
 inline TensorPolynomial<Scalar>&
 operator*=(const Complex<Scalar>& c, TensorPolynomial<Scalar>& p) {
@@ -250,24 +379,20 @@ operator*=(const Complex<Scalar>& c, TensorPolynomial<Scalar>& p) {
 	return p;
 }
 
-template<typename Scalar>
-TensorPolynomial<Scalar> operator*(const Tensor& t1, const Tensor& t2) {
-	TensorPolynomial<Scalar> res;
-	res.terms.emplace_back(one<Scalar>());
-	typename TensorPolynomial<Scalar>::Term& term = res.terms.back();
-	term.factors.push_back(t1);
-	term.factors.push_back(t2);
+//----------------------------------------------------------------------
 
-	res.canonicalize();
-	return res;
-}
-
+/**
+ * Negation operator for a basis Lorentz-invariant (pseudo)-tensor.
+ * Results in a tensor polynomial.
+ */
 template<typename Scalar>
 inline TensorPolynomial<Scalar> operator-(const Tensor& t) {
 	TensorPolynomial<Scalar> res{t};
 	res.terms[0].coeff = -one<Scalar>();
 	return res;
 }
+
+//----------------------------------------------------------------------
 
 template<typename Scalar>
 void TensorPolynomial<Scalar>::canonicalize() {
@@ -283,6 +408,8 @@ void TensorPolynomial<Scalar>::canonicalize() {
 	contractIndices();
 	mergeTerms();
 }
+
+//----------------------------------------------------------------------
 
 template<typename Scalar>
 void TensorPolynomial<Scalar>::expandEpsilonPowers() {
@@ -342,6 +469,8 @@ void TensorPolynomial<Scalar>::expandEpsilonPowers() {
 	this->terms = tmpTerms;
 }
 
+//----------------------------------------------------------------------
+
 template<typename Scalar>
 void TensorPolynomial<Scalar>::contractIndices() {
 	typename TensorPolynomial<Scalar>::Terms tmpTerms;
@@ -355,6 +484,8 @@ void TensorPolynomial<Scalar>::contractIndices() {
 
 	this->terms = tmpTerms;
 }
+
+//----------------------------------------------------------------------
 
 template<typename Scalar>
 std::optional<typename TensorPolynomial<Scalar>::Term>
@@ -375,12 +506,19 @@ TensorPolynomial<Scalar>::contractIndices(
 	epsilons.reserve(src.factors.size());
 
 	for (const Tensor& factor : src.factors) {
-		if (factor.id() ==  Basis::epsilon)
+		if (factor.id() ==  Basis::epsilon) {
+			if (!factor.complete())
+				throw std::runtime_error{factor.id()
+											+ " requires four indices"};
+
 			epsilons.push_back(factor);
-		else if ((factor.id() == Basis::eta)
-				|| (factor.id() == Basis::delta))
+		} else if ((factor.id() == Basis::eta)
+				|| (factor.id() == Basis::delta)) {
+			if (!factor.complete())
+				throw std::runtime_error{factor.id()
+											+ " requires two indices"};
 			metrics.push_back(factor);
-		else
+		} else
 			throw std::runtime_error{
 				"Invalid Lorentz-invariant tensor id" };
 	}
@@ -472,6 +610,8 @@ TensorPolynomial<Scalar>::contractIndices(
 	return res;
 }
 
+//----------------------------------------------------------------------
+
 template<typename Scalar>
 std::optional<typename TensorPolynomial<Scalar>::Term>
 TensorPolynomial<Scalar>::tryMerge(const Term &t1, const Term &t2) {
@@ -529,6 +669,8 @@ TensorPolynomial<Scalar>::tryMerge(const Term &t1, const Term &t2) {
 	return res;
 }
 
+//----------------------------------------------------------------------
+
 template<typename Scalar>
 void TensorPolynomial<Scalar>::mergeTerms(Merger merger) {
 	typename TensorPolynomial<Scalar>::Terms tmpTerms;
@@ -556,10 +698,12 @@ void TensorPolynomial<Scalar>::mergeTerms(Merger merger) {
 	this->terms = tmpTerms;
 }
 
+//----------------------------------------------------------------------
+
 } /*namespace LI*/
 
-}
+} /*namespace algebra*/
 
-}
+} /*namespace dirac*/
 
 #endif /* SRC_ALGEBRA_LORENTZINVARIANT_HPP_ */

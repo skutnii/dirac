@@ -1,6 +1,8 @@
 /*
  * Token.cpp
  *
+ * Operation constant definitions
+ *
  *  Created on: Dec 12, 2022
  *      Author: skutnii
  */

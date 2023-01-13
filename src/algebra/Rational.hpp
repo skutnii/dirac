@@ -1,6 +1,8 @@
 /*
  * Rational.hpp
  *
+ *	Rational number arithmetic
+ *
  *  Created on: Dec 28, 2022
  *      Author: skutnii
  */
@@ -15,11 +17,26 @@ namespace dirac {
 
 namespace algebra {
 
+/**
+ * Naive rational number implementation.
+ * Does not care about overflows
+ * and can be used in not too complex computations.
+ */
 class Rational {
 public:
+	/**
+	 * Numerator
+	 */
 	long long int num() const { return _num; };
+
+	/**
+	 * Denominator
+	 */
 	unsigned long long int den() const { return _den; };
 
+	/**
+	 * Absolute value of the numerator
+	 */
 	unsigned long long int absNum() const {
 		return static_cast<unsigned long long int>(std::abs(_num));
 	}
@@ -42,8 +59,14 @@ public:
 		return *this;
 	};
 
+	/**
+	 * Whether the callee is a valid finite rational number.
+	 */
 	bool finite() const { return (_den != 0); }
 
+	/**
+	 * Equality check
+	 */
 	bool operator==(const Rational& other) const {
 		if (!finite() || !other.finite())
 			return false;
@@ -51,6 +74,9 @@ public:
 		return (other._den * _num == _den * other._num);
 	}
 
+	/**
+	 * Addition
+	 */
 	Rational operator+(const Rational& r2) const {
 		return Rational{
 			_num * static_cast<long long int>(r2._den)
@@ -58,6 +84,9 @@ public:
 			_den * r2._den };
 	}
 
+	/**
+	 * Subtraction
+	 */
 	Rational operator-(const Rational& r2) const {
 		return Rational{
 			_num * static_cast<long long int>(r2._den)
@@ -65,10 +94,16 @@ public:
 			_den * r2._den };
 	}
 
+	/**
+	 * Multiplication
+	 */
 	Rational operator*(const Rational& r2) const {
 		return Rational{ _num * r2._num, _den * r2._den };
 	}
 
+	/**
+	 * Division
+	 */
 	Rational operator/(const Rational& r2) const {
 		if (r2._num < 0)
 			return Rational{
@@ -80,6 +115,9 @@ public:
 			_den * r2._num };
 	}
 
+	/**
+	 * Negation (unary minus)
+	 */
 	Rational operator-() const {
 		Rational res;
 		res._num = -_num;
@@ -87,6 +125,9 @@ public:
 		return res;
 	}
 
+	/**
+	 * Greater-than operator
+	 */
 	bool operator>(const Rational& other) const {
 		if (!finite() || !other.finite())
 			return false;
@@ -95,6 +136,9 @@ public:
 				> other.num() * static_cast<long long int>(den()));
 	}
 
+	/**
+	 * Lesser-than operator
+	 */
 	bool operator<(const Rational& other) const {
 		if (!finite() || !other.finite())
 			return false;
@@ -103,6 +147,9 @@ public:
 				< other.num() * static_cast<long long int>(den()));
 	}
 
+	/**
+	 * Mutating addition
+	 */
 	Rational& operator+=(const Rational& other) {
 		if (other._num != 0) {
 			_num = _num * static_cast<long long int>(other._den)
@@ -114,6 +161,9 @@ public:
 		return *this;
 	}
 
+	/**
+	 * Mutating subtraction
+	 */
 	Rational& operator-=(const Rational& other) {
 		if (other._num != 0) {
 			_num = _num * static_cast<long long int>(other._den)
@@ -125,6 +175,9 @@ public:
 		return *this;
 	}
 
+	/**
+	 * Mutating multiplication
+	 */
 	Rational& operator*=(const Rational& other) {
 		_num = _num * other._num;
 		_den = _den * other._den;
@@ -133,6 +186,9 @@ public:
 		return *this;
 	}
 
+	/**
+	 * Mutating division
+	 */
 	Rational& operator/=(const Rational& other) {
 		_num = _num * static_cast<long long int>(other._den);
 		_den = _den * static_cast<unsigned long long int>(other._num);
@@ -142,8 +198,16 @@ public:
 	}
 
 private:
+	/**
+	 * Normalizes the number by removing common factors
+	 * from the numerator and denominator
+	 */
 	void normalize();
 
+	/**
+	 * Removes the common factor specified by the argument
+	 * from the numerator and denominator
+	 */
 	void removeFactor(unsigned long long int f);
 
 	long long int _num;

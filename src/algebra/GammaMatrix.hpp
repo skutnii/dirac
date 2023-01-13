@@ -1,5 +1,7 @@
 /*
- * PseudoMatrix.h
+ * GammaMatrix.hpp
+ *
+ * Pseudo-matrix representation of Dirac matrices
  *
  *  Created on: Dec 13, 2022
  *      Author: skutnii
@@ -15,6 +17,7 @@
 
 namespace Eigen {
 
+//Eigen requirements for matrices with tensor polynomial coefficients
 template<typename Scalar>
 struct NumTraits<dirac::algebra::LI::TensorPolynomial<Scalar> >
 {
@@ -40,15 +43,29 @@ namespace dirac {
 
 namespace algebra {
 
+/**
+ * Pseudo-matrix: representation of a Dirac matrix
+ * as a 5x5 matrix of left multiplication tensor structure constants
+ */
 template<typename Scalar>
 using GammaMatrix = Eigen::Matrix<LI::TensorPolynomial<Scalar>, 5, 5>;
 
+/**
+ * Pseudo-vector, representing an arbitrary 4x4 matrix
+ * as a linear combinations of Dirac matrices and their products.
+ * vector elements are coefficients of the expansion
+ */
 template<typename Scalar>
 using GammaVector = Eigen::Matrix<LI::TensorPolynomial<Scalar>, 5, 1>;
 
-
+/**
+ * Pseudo-matrix representation of \gamma^\mu.
+ * First argument is \gamma's tensor index (upper \mu for \gamma^\mu),
+ * the rest are templates to construct the rest of pseudo-matrix indices
+ */
 template<typename Scalar>
-GammaMatrix<Scalar> gamma(const TensorIndex& mu, int leftTag, int rightTag)  {
+GammaMatrix<Scalar> gamma(const TensorIndex& mu,
+						int leftTag, int rightTag)  {
 	TensorIndex nu{ IndexTag{ rightTag, 0 }, true };
 	TensorIndex nu1{ IndexTag{ rightTag, 1 }, true };
 	TensorIndex nu2{ IndexTag{ rightTag, 2 }, true };
@@ -62,11 +79,15 @@ GammaMatrix<Scalar> gamma(const TensorIndex& mu, int leftTag, int rightTag)  {
 	GammaMatrix<Scalar> res;
 	res(0, 1) = eta<Scalar>(mu, nu);
 	res(1, 0) = eta<Scalar>(mu, lambda);
-	res(1, 2) = I<Scalar>() * (eta<Scalar>(mu, nu1) * eta<Scalar>(nu2, lambda)
-								- eta<Scalar>(mu, nu2) * eta<Scalar>(nu1, lambda));
-	res(2, 1) = -(I<Scalar>() / Scalar{ 2 }) * (eta<Scalar>(mu, lambda1) * eta<Scalar>(nu, lambda2) -
-			eta<Scalar>(mu, lambda2) * eta<Scalar>(nu, lambda1));
-	res(2, 3) = (one<Scalar>() / Scalar{ 2 }) * epsilon<Scalar>(mu, nu, lambda1, lambda2);
+	res(1, 2) = I<Scalar>() * (eta<Scalar>(mu, nu1)
+								* eta<Scalar>(nu2, lambda)
+									- eta<Scalar>(mu, nu2)
+										* eta<Scalar>(nu1, lambda));
+	res(2, 1) = -(I<Scalar>() / Scalar{ 2 }) * (
+			eta<Scalar>(mu, lambda1) * eta<Scalar>(nu, lambda2) -
+				eta<Scalar>(mu, lambda2) * eta<Scalar>(nu, lambda1));
+	res(2, 3) = (one<Scalar>() / Scalar{ 2 }) *
+					epsilon<Scalar>(mu, nu, lambda1, lambda2);
 	res(3, 2) = -epsilon<Scalar>(mu, nu1, nu2, lambda);
 	res(3, 4) = -eta<Scalar>(mu, lambda);
 	res(4, 3) = -eta<Scalar>(mu, nu);
@@ -74,6 +95,10 @@ GammaMatrix<Scalar> gamma(const TensorIndex& mu, int leftTag, int rightTag)  {
 	return res;
 }
 
+/**
+ * Pseudo-matrix representation of \gamma^5.
+ * Arguments are templates for elements tensor indices.
+ */
 template<typename Scalar>
 GammaMatrix<Scalar> gamma5(int leftTag, int rightTag) {
 	TensorIndex nu{ IndexTag{ rightTag, 0 }, true };
@@ -89,13 +114,21 @@ GammaMatrix<Scalar> gamma5(int leftTag, int rightTag) {
 	GammaMatrix<Scalar> res;
 	res(0, 4) = one<Scalar>();
 	res(1, 3) = eta<Scalar>(nu, lambda);
-	res(2, 2) = - (I<Scalar>() / Scalar{ 2 }) * epsilon<Scalar>(nu1, nu2, lambda1, lambda2);
+	res(2, 2) = - (I<Scalar>() / Scalar{ 2 })
+						* epsilon<Scalar>(nu1, nu2, lambda1, lambda2);
 	res(3, 1) = eta<Scalar>(nu, lambda);
 	res(4, 0) = one<Scalar>();
 
 	return res;
 }
 
+/**
+ * Pseudo-matrix representation of \sigma^{\mu\nu}.
+ * First two arguments arre \sigma's tensor indices
+ * (upper \mu,\nu for \sigma^{\mu\nu}),
+ * the rest are templates to construct coefficients'
+ * tensor indices.
+ */
 template<typename Scalar>
 GammaMatrix<Scalar> sigma(const TensorIndex& mu1,
 		const TensorIndex& mu2,
@@ -123,16 +156,33 @@ GammaMatrix<Scalar> sigma(const TensorIndex& mu1,
 					- eta<Scalar>(mu2, lambda1) * eta<Scalar>(mu1, lambda2));
 
 	res(2, 2) = (I<Scalar>() / Scalar{ 2 }) * (
-					eta<Scalar>(mu1, lambda1) * eta<Scalar>(nu2, lambda2) * eta<Scalar>(mu2, nu1)
-					- eta<Scalar>(mu2, lambda1) * eta<Scalar>(nu2, lambda2) * eta<Scalar>(mu1, nu1)
-					- eta<Scalar>(mu1, lambda1) * eta<Scalar>(nu1, lambda2) * eta<Scalar>(mu2, nu2)
-					+ eta<Scalar>(mu2, lambda1) * eta<Scalar>(nu1, lambda2) * eta<Scalar>(mu1, nu2)
-					+ eta<Scalar>(mu1, nu1) * eta<Scalar>(mu2, lambda2) * eta<Scalar>(nu2, lambda1)
-					- eta<Scalar>(mu1, nu2) * eta<Scalar>(mu2, lambda2) * eta<Scalar>(nu1, lambda1)
-					- eta<Scalar>(mu2, nu1) * eta<Scalar>(mu1, lambda2) * eta<Scalar>(nu2, lambda1)
-					+ eta<Scalar>(mu2, nu2) * eta<Scalar>(mu1, lambda2) * eta<Scalar>(nu1, lambda1));
+					eta<Scalar>(mu1, lambda1)
+						* eta<Scalar>(nu2, lambda2)
+						* eta<Scalar>(mu2, nu1)
+					- eta<Scalar>(mu2, lambda1)
+						* eta<Scalar>(nu2, lambda2)
+						* eta<Scalar>(mu1, nu1)
+					- eta<Scalar>(mu1, lambda1)
+						* eta<Scalar>(nu1, lambda2)
+						* eta<Scalar>(mu2, nu2)
+					+ eta<Scalar>(mu2, lambda1)
+						* eta<Scalar>(nu1, lambda2)
+						* eta<Scalar>(mu1, nu2)
+					+ eta<Scalar>(mu1, nu1)
+						* eta<Scalar>(mu2, lambda2)
+						* eta<Scalar>(nu2, lambda1)
+					- eta<Scalar>(mu1, nu2)
+						* eta<Scalar>(mu2, lambda2)
+						* eta<Scalar>(nu1, lambda1)
+					- eta<Scalar>(mu2, nu1)
+						* eta<Scalar>(mu1, lambda2)
+						* eta<Scalar>(nu2, lambda1)
+					+ eta<Scalar>(mu2, nu2)
+						* eta<Scalar>(mu1, lambda2)
+						* eta<Scalar>(nu1, lambda1));
 
-	res(2, 4) = - (I<Scalar>() / Scalar{ 2 }) * epsilon<Scalar>(mu1, mu2, lambda1, lambda2);
+	res(2, 4) = - (I<Scalar>() / Scalar{ 2 })
+						* epsilon<Scalar>(mu1, mu2, lambda1, lambda2);
 	res(3, 1) = - epsilon<Scalar>(mu1, mu2, nu, lambda);
 	res(3, 3) = I<Scalar>() *
 					(eta<Scalar>(mu2, nu) * eta<Scalar>(mu1, lambda)
@@ -142,9 +192,15 @@ GammaMatrix<Scalar> sigma(const TensorIndex& mu1,
 	return res;
 }
 
+//----------------------------------------------------------------------
 
+/**
+ * Constructs a diagonal pseudo-matrix
+ * with all nonzero elements equal to the argument
+ */
 template<typename Scalar>
-inline GammaMatrix<Scalar> diag(const LI::TensorPolynomial<Scalar>& coeff) {
+inline GammaMatrix<Scalar>
+diag(const LI::TensorPolynomial<Scalar>& coeff) {
 	GammaMatrix<Scalar> res;
 	for (unsigned int i = 0; i < 5; ++i)
 		res(i, i) = coeff;
