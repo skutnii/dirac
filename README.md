@@ -35,7 +35,7 @@ From the folder containing the dirac executable
 ./dirac [options]
 ```
 The behavior depends on the options provided.
-If "-e" option is provided, followed by an expression, the app computes the expression,
+If `-e` option is provided, followed by an expression, the app computes the expression,
 prints the result to the output and exits:
 ```console
 ./dirac -e "\gamma_\mu\gamma_\nu"
@@ -60,16 +60,16 @@ Terminates the application
 
 ## Set-expression
 ```console
-dirac:> #set [var-name] [var-value]
+dirac:> #set <var-name> <var-value>
 ```
-Sets environment variable identified by var-name to var-value.
+Sets environment variable identified by `var-name` to `var-value`.
 The variables affect application behavior.
 
 ### Environment variables and their meanings
 
 #### mode
-Arithmetic mode. Possible values: "float" and "rational". Default is rational.
-Equivalent command line option "-m".
+Arithmetic mode. Possible values: `float` and `rational`. Default is rational.
+Equivalent command line option `-m`.
 
 ```console
 dirac:> #set mode float
@@ -88,9 +88,9 @@ A more robust implementation may be added in the future if there is user demand 
 Please inform me of any real world cases where overflows are a concern.
 
 #### line_terms
-Number of terms per output line. Possible values: integers or 'inf' (meaning 'infinity'). Default: 'inf'.
+Number of terms per output line. Possible values: integers or `inf` (meaning 'infinity'). Default: `inf`.
 When this variable is set to a nonzero integer constant, LaTeX line breaks (as if inside 'split' environment) are inserted
-after each line_terms terms.
+after each `line_terms` terms.
 
 ```console
 dirac:> #set line_terms 2
@@ -104,13 +104,13 @@ dirac:> #set line_terms inf
 dirac:> \gamma_\kappa\gamma_\lambda\gamma_\mu\gamma_\nu
 \eta_{\lambda\kappa}\eta_{\nu\mu} + \eta_{\mu\lambda}\eta_{\nu\kappa}  -\eta_{\mu\kappa}\eta_{\nu\lambda} + \left[ - I\eta_{\kappa\omega_{1}}\eta_{\lambda\omega_{2}}\eta_{\nu\mu}   - I\eta_{\kappa\omega_{1}}\eta_{\mu\lambda}\eta_{\nu\omega_{2}} + I\eta_{\kappa\omega_{1}}\eta_{\mu\omega_{2}}\eta_{\nu\lambda} + I\eta_{\kappa\lambda}\eta_{\omega_{1}\nu}\eta_{\omega_{2}\mu}   - I\eta_{\kappa\mu}\eta_{\omega_{1}\nu}\eta_{\omega_{2}\lambda} + I\eta_{\kappa\nu}\eta_{\omega_{1}\mu}\eta_{\omega_{2}\lambda}\right]\sigma^{\omega_{1}\omega_{2}}   - I\epsilon_{\lambda\mu\nu\kappa}\gamma^5
 ```
-Equivalent command line option: "-l".
+Equivalent command line option: `-l`.
 
 #### dummy
 Dummy index template. Possible values: string literals. 
 Greek letters in LaTeX notation are good choice.
-Default is '\omega'.
-Equivalent command line option: "-d".
+Default is `\omega`.
+Equivalent command line option: `-d`.
 ```console
 dirac:> \gamma_\mu\gamma_\nu
 \eta_{\nu\mu}   - I\eta_{\mu\omega_{1}}\eta_{\nu\omega_{2}}\sigma^{\omega_{1}\omega_{2}}
@@ -121,7 +121,7 @@ dirac:> \gamma_\mu\gamma_\nu
 
 #### apply_symmetry
 Controls whether the coefficient terms at $\sigma^{\mu\nu}$ are merged in the output by taking into account $\sigma$'s antisymmetry.
-Possible values: "true" or "false". Default is "true". Command line equivalent: "-s".
+Possible values: `true` or `false`. Default is `true`. Command line equivalent: `-s`.
 ```console
 dirac:> #set apply_symmetry false
 dirac:> \gamma_\mu\gamma_\nu
@@ -175,4 +175,4 @@ ruby tests.rb /path/to/dirac/executable [output_name]
 The script feeds a number of test inputs to dirac executable specified via command line,
 collects results into a .tex file and invokes pdflatex on the latter.
 If output_name is specified, the LaTeX name is output_name.tex and PDF is output_name.pdf (.tex extension if appended if not specified).
-Otherwise, the default name "tests.tex" is used.
+Otherwise, the default name tests.tex is used.
