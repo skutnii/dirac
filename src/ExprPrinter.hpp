@@ -227,7 +227,12 @@ std::string ExprPrinter<Scalar>::latexify(const Complex<Scalar>& c) {
 		value += " + ";
 
 	if (hasImag)
-		value += latexify(c.imag()) + "I";
+		if (c.imag() == static_cast<Scalar>(1))
+			value += "I";
+		else if (c.imag() == static_cast<Scalar>(-1))
+			value += "-I";
+		else
+			value += latexify(c.imag()) + "I";
 
 	return value;
 }
