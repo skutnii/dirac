@@ -14,6 +14,8 @@ namespace dirac {
 
 namespace algebra {
 
+//----------------------------------------------------------------------
+
 void Rational::normalize() {
 	if ((absNum() == 0) || (_den == 0)
 			|| (absNum() == 1) || (_den == 1))
@@ -25,6 +27,8 @@ void Rational::normalize() {
 			div < std::sqrt(std::min(absNum(), _den)); div += 2)
 		removeFactor(div);
 }
+
+//----------------------------------------------------------------------
 
 void Rational::removeFactor(unsigned long long int f) {
 	while (((absNum() % f) == 0) && ((_den % f) == 0)) {

@@ -1,6 +1,8 @@
 /*
  * IndexId.hpp
  *
+ * Tensor index identifier type definition and hash function
+ *
  *  Created on: Dec 17, 2022
  *      Author: skutnii
  */
@@ -23,6 +25,9 @@ namespace dirac {
 
 namespace algebra {
 
+/**
+ * Tensor index identifier type definition
+ */
 using IndexTag = std::pair<int, int>;
 using IndexId = std::variant<std::string, IndexTag>;
 

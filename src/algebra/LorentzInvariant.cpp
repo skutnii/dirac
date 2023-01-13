@@ -1,5 +1,7 @@
 /*
- * Tensor.cpp
+ * LorentzInvariant.cpp
+ *
+ * Lorentz-invariant (pseudo)-tensor basis element name constants.
  *
  *  Created on: Dec 13, 2022
  *      Author: skutnii

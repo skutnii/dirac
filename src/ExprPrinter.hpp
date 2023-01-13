@@ -1,6 +1,8 @@
 /*
  * ExprPrinter.hpp
  *
+ * LaTeX printer for canonical gamma-matrix exprressions
+ *
  *  Created on: Dec 22, 2022
  *      Author: skutnii
  */
@@ -21,28 +23,75 @@ namespace dirac {
 
 namespace symbolic {
 
+/**
+ * LaTeX printer for gamma-matrix expressions
+ */
 template<typename Scalar>
 class ExprPrinter {
 public:
+	/**
+	 * Constructor.
+	 *
+	 * @param dummyIndexName - dummy index name template,
+	 * 		  used to print indices with non-string identifiers.
+	 * 		  See mapIndexId
+	 *
+	 * @param lineSize - number of terms per line.
+	 * 		  If this parameter is nonzero,
+	 * 		  the printer inserts line breaks after each lineSize terms.
+	 * 		  The line breaks are in LaTeX format, as if inside
+	 * 		  'split' LaTeX environment.
+ 	 */
 	ExprPrinter(const std::string& dummyIndexName, size_t lineSize)
 		: _dummyIndexName{ dummyIndexName }, _lineSize{ lineSize } {}
 
+	/**
+	 * Main pretty-printing method.
+	 * Converts a canonical expression to LaTeX.
+	 */
 	std::string latexify(const CanonicalExpr<Scalar>& expr);
+
+	/**
+	 * LaTeX representation of a tensorial expression
+	 * (that is, anything with indices).
+	 */
 	std::string latexify(const std::string& tensorHead,
 							const TensorIndices& indices);
 
+	/**
+	 * LaTeX representation of a Lorentz-invariant (pseudo)-tensor
+	 */
 	std::string latexify(const algebra::LI::Tensor& t) {
 		return latexify(t.id(), t.indices());
 	}
 
+	/**
+	 * LaTeX representation of a number.
+	 * Default implementation calls std::to_string
+	 */
 	std::string latexify(const Scalar& s) {
 		return std::to_string(s);
 	}
 
+	/**
+	 * LaTeX representation of a complex number
+	 */
 	std::string latexify(const Complex<Scalar>& c);
 
+	/**
+	 * Helper structure for LaTeX representation of a single term
+	 * in a polynomial
+	 */
 	struct LatexTerm {
+		/**
+		 * Sign that may be prepended to a term.
+		 * "+" or empty
+		 */
 		std::string sign;
+
+		/**
+		 * Term body
+		 */
 		std::string body;
 
 		LatexTerm(const std::string& s, const std::string& b) :
@@ -57,6 +106,9 @@ public:
 
 	using LatexTerms = std::vector<LatexTerm>;
 
+	/**
+	 * Joins terms into a string
+	 */
 	static std::string join(const LatexTerms& latexTerms) {
 		std::stringstream latex;
 		bool isFirst = true;
@@ -75,9 +127,24 @@ public:
 		return latex.str();
 	}
 
+	/**
+	 * LaTeX representation of a Lorentz-invariant
+	 * (pseudo)-tensor polynomial.
+	 */
 	LatexTerms
 	latexify(const algebra::LI::TensorPolynomial<Scalar>& poly);
 
+	/**
+	 * If the index identifier is a string, returns it.
+	 * Otherwise maps it to a string using the dummyIndexName
+	 * provided to the printer's constructor.
+	 *
+	 * Internally, the printer instance maintains a table
+	 * of encountered non-string index identifiers.
+	 * If dummyIndexName is e.g. \omega, then the first
+	 * encountered index identifier will be mapped to
+	 * \omega_1, the second one to \omega_2 and so on.
+	 */
 	std::string mapIndexId(const algebra::IndexId& aId);
 private:
 	std::string _dummyIndexName;
@@ -93,6 +160,8 @@ extern const std::string leftSquareBracket;
 extern const std::string rightSquareBracket;
 extern const std::string leftBracket;
 extern const std::string rightBracket;
+
+//----------------------------------------------------------------------
 
 template<typename Scalar>
 std::string
@@ -134,9 +203,16 @@ ExprPrinter<Scalar>::latexify(const std::string& head,
 	return value;
 }
 
+//----------------------------------------------------------------------
+
+/**
+ * Specialization for LaTeX representation of rationals
+ */
 template<>
 std::string
 ExprPrinter<algebra::Rational>::latexify(const algebra::Rational& r);
+
+//----------------------------------------------------------------------
 
 template<typename Scalar>
 std::string ExprPrinter<Scalar>::latexify(const Complex<Scalar>& c) {
@@ -156,10 +232,18 @@ std::string ExprPrinter<Scalar>::latexify(const Complex<Scalar>& c) {
 	return value;
 }
 
+//----------------------------------------------------------------------
+
+/**
+ * Specialization for LaTeX representation of a complex number
+ * with rational constituents.
+ */
 template<>
 std::string
 ExprPrinter<algebra::Rational>::latexify(
 		const Complex<algebra::Rational>& c);
+
+//----------------------------------------------------------------------
 
 template<typename Scalar>
 std::string sign(const Complex<Scalar>& c) {
@@ -171,6 +255,8 @@ std::string sign(const Complex<Scalar>& c) {
 	else
 		return (c.imag() > zero) ? "+" : "";
 }
+
+//----------------------------------------------------------------------
 
 template<typename Scalar>
 typename ExprPrinter<Scalar>::LatexTerms
@@ -211,6 +297,8 @@ ExprPrinter<Scalar>::latexify(
 	return latex;
 }
 
+//----------------------------------------------------------------------
+
 template<typename Scalar>
 std::string ExprPrinter<Scalar>::mapIndexId(
 									const algebra::IndexId& aId) {
@@ -229,6 +317,8 @@ std::string ExprPrinter<Scalar>::mapIndexId(
 	_indexTagMap[tag] = tagStr;
 	return tagStr;
 }
+
+//----------------------------------------------------------------------
 
 template<typename Scalar>
 std::string
@@ -306,6 +396,8 @@ ExprPrinter<Scalar>::latexify(const CanonicalExpr<Scalar>& expr) {
 
 	return join(allTerms);
 }
+
+//----------------------------------------------------------------------
 
 } /* namespace symbolic */
 

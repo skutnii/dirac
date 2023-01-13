@@ -1,6 +1,8 @@
 /*
  * Gamma.cpp
  *
+ *	Gamma ring constants
+ *
  *  Created on: Dec 21, 2022
  *      Author: skutnii
  */

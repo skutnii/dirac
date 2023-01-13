@@ -25,20 +25,22 @@ void forPermutations(unsigned int n, PermutationWalker walker) {
 	}
 
 	for (unsigned int k = 0; k < n; ++k)
-		forPermutations(n - 1, [k, n, &walker](const Permutation& rest) {
-			Permutation combo;
-			combo.map.reserve(n);
-			combo.map.push_back(k);
-			for (unsigned int l : rest.map)
-				if (l < k)
-					combo.map.push_back(l);
-				else
-					combo.map.push_back(l + 1);
+		forPermutations(n - 1,
+			[k, n, &walker](const Permutation& rest) {
+				Permutation combo;
+				combo.map.reserve(n);
+				combo.map.push_back(k);
+				for (unsigned int l : rest.map)
+					if (l < k)
+						combo.map.push_back(l);
+					else
+						combo.map.push_back(l + 1);
 
-			bool kEven = (k % 2) == 0;
-			combo.isEven = (rest.isEven && kEven) || (!rest.isEven && !kEven);
-			walker(combo);
-		});
+				bool kEven = (k % 2) == 0;
+				combo.isEven = (rest.isEven && kEven)
+										|| (!rest.isEven && !kEven);
+				walker(combo);
+			});
 }
 
 
