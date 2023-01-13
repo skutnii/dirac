@@ -506,12 +506,19 @@ TensorPolynomial<Scalar>::contractIndices(
 	epsilons.reserve(src.factors.size());
 
 	for (const Tensor& factor : src.factors) {
-		if (factor.id() ==  Basis::epsilon)
+		if (factor.id() ==  Basis::epsilon) {
+			if (!factor.complete())
+				throw std::runtime_error{factor.id()
+											+ " requires four indices"};
+
 			epsilons.push_back(factor);
-		else if ((factor.id() == Basis::eta)
-				|| (factor.id() == Basis::delta))
+		} else if ((factor.id() == Basis::eta)
+				|| (factor.id() == Basis::delta)) {
+			if (!factor.complete())
+				throw std::runtime_error{factor.id()
+											+ " requires two indices"};
 			metrics.push_back(factor);
-		else
+		} else
 			throw std::runtime_error{
 				"Invalid Lorentz-invariant tensor id" };
 	}
