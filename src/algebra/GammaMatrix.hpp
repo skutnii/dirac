@@ -134,8 +134,9 @@ GammaMatrix<Scalar> sigma(const TensorIndex& mu1,
 
 	res(2, 4) = - (I<Scalar>() / Scalar{ 2 }) * epsilon<Scalar>(mu1, mu2, lambda1, lambda2);
 	res(3, 1) = - epsilon<Scalar>(mu1, mu2, nu, lambda);
-	res(3, 3) = I<Scalar>() * (eta<Scalar>(mu1, nu) * eta<Scalar>(mu2, lambda)
-					- eta<Scalar>(mu2, nu) * eta<Scalar>(mu1, lambda));
+	res(3, 3) = I<Scalar>() *
+					(eta<Scalar>(mu2, nu) * eta<Scalar>(mu1, lambda)
+					- eta<Scalar>(mu1, nu) * eta<Scalar>(mu2, lambda));
 	res(4, 2) = - I<Scalar>() * epsilon<Scalar>(mu1, mu2, nu1, nu2);
 
 	return res;
