@@ -328,6 +328,15 @@ std::string ExprPrinter<Scalar>::mapIndexId(
 template<typename Scalar>
 std::string
 ExprPrinter<Scalar>::latexify(const CanonicalExpr<Scalar>& expr) {
+	if (expr.isZero())
+		return "0";
+
+	if (expr.isScalar(static_cast<Scalar>(1)))
+		return "1";
+
+	if (expr.isScalar(static_cast<Scalar>(-1)))
+		return "-1";
+
 	LatexTerms latexCoeffs[] = {
 			latexify(expr.coeffs(0)),
 			latexify(expr.coeffs(1)),
