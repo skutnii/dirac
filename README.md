@@ -6,6 +6,10 @@ Dirac app converts them to linear combinations of the unit matrix,
 $\gamma^\mu$, $\sigma^{\mu\nu}$, $\gamma^5\gamma^\mu$, and $\gamma^5$.
 The result is printed in LaTeX format.
 
+# Project structure
+The application source code resides in the 'src' folder. The 'lib' folder contains code libraries used by the implementation.
+The 'examples' folder containsis for usage examples (see the [Examples section](#examples)).
+
 # Dependencies
 
 The main app is written in C++20, so it requires a C++20-capable compiler.
