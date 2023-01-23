@@ -45,7 +45,7 @@ prints the result to the output and exits:
 ./dirac -e "\gamma_\mu\gamma_\nu"
 \eta_{\nu\mu}   - I\eta_{\mu\omega_{1}}\eta_{\nu\omega_{2}}\sigma^{\omega_{1}\omega_{2}}
 ```
-Note the quotes around the expression: the terminal would eat backslashes othrwise.
+Note the quotes around the expression: the terminal would eat backslashes otherwise.
 This is mostly useful when scripting (see the Examples section). If no expression is provided via command line,
 the app starts an interactive shell.
 
