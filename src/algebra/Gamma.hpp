@@ -136,6 +136,22 @@ struct CanonicalExpr {
 	 * taking antisymmetry into account.
 	 */
 	void applySymmetry();
+
+	/**
+	 * Check whether the expression is scalar equal to the argument
+	 */
+	bool isScalar(Scalar s) const;
+
+	/**
+	 * Check whether the expression is zero
+	 */
+	bool isZero() const {
+		for (unsigned int i = 0; i < 5; ++i)
+			if (!coeffs(i).isZero())
+				return false;
+
+		return true;
+	}
 };
 
 //----------------------------------------------------------------------
@@ -319,8 +335,22 @@ void CanonicalExpr<Scalar>::applySymmetry() {
 			});
 }
 
+//----------------------------------------------------------------------
+
+template<typename Scalar>
+bool CanonicalExpr<Scalar>::isScalar(Scalar s) const {
+	for (unsigned int i = 1; i < 5; ++i)
+		if (!coeffs(i).isZero())
+			return false;
+
+	return ((coeffs(0).terms.size() == 1)
+			&& coeffs(0).terms[0].factors.empty()
+			&& (coeffs(0).terms[0].coeff == s));
+}
+
 } /* namespace algebra */
 
 } /* namespace dirac */
+
 
 #endif /* SRC_SYMBOLIC_HPP_ */
