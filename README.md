@@ -162,7 +162,7 @@ save for checking that all basic tensors have correct index counts at computatio
 
 # Examples
 
-The folder DIRAC_ROOT/examples currently contains two Ruby scripts.
+The folder DIRAC_ROOT/examples currently contains three Ruby sources.
 
 common.rb contains some possibly reusable Ruby code facilitating command-line invocation of the dirac app from Ruby.
 
@@ -176,3 +176,7 @@ The script feeds a number of test inputs to dirac executable specified via comma
 collects results into a .tex file and invokes pdflatex on the latter.
 If output_name is specified, the LaTeX name is output_name.tex and PDF is output_name.pdf (.tex extension if appended if not specified).
 Otherwise, the default name tests.tex is used.
+
+fierz6.rb simplifies a number of products of five basis matrices that occur in derivation of 6th-order Fierz identities. Usage:
+```console
+ruby fierz6.rb /path/to/dirac/executable```
