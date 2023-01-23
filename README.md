@@ -180,3 +180,5 @@ Otherwise, the default name tests.tex is used.
 fierz6.rb simplifies a number of products of five basis matrices that occur in derivation of 6th-order Fierz identities. Usage:
 ```console
 ruby fierz6.rb /path/to/dirac/executable```
+```
+This produces fierz6.tex and fierz6.pdf documents with the results.
