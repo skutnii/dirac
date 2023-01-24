@@ -186,3 +186,10 @@ fierz6.rb simplifies a number of products of five basis matrices that occur in d
 ruby fierz6.rb /path/to/dirac/executable
 ```
 This produces fierz6.tex and fierz6.pdf documents with the results.
+
+# Papers
+
+arXiv: [Dirac: a command-line γ-matrix calculator](https://arxiv.org/abs/2301.09512)
+
+In addition to the user guide above, the paper outlines motivation behind the software and mathematical approach to computation. 
+Please cite if you use dirac in your research.
