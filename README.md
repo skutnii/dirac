@@ -14,7 +14,7 @@ The 'examples' folder containsis for usage examples (see the [Examples section](
 
 The main app is written in C++20, so it requires a C++20-capable compiler.
 CMake minimal version 3.0 is used as the build system.
-Ruby language minimal version 3.0 and open3 ruby gem are required to run example Ruby scripts.
+Ruby 3 language interpreter, ``open3'' Ruby gem, and LaTeX installation with `pdflatex` are required to run example scripts.
 
 This app uses [Eigen](https://eigen.tuxfamily.org) for linear algebra.
 Eigen library is shipped with the code in the DIRAC_ROOT/lib/eigen folder.
