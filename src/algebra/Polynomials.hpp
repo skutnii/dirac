@@ -94,6 +94,10 @@ struct Polynomial {
 	operator=(const Polynomial<Coeff, Factor>& other) = default;
 	virtual ~Polynomial() = default;
 
+	Polynomial(const Coeff& c) {
+		terms.emplace_back(c);
+	}
+
 	/**
 	 * Polynomial canonicalization method.
 	 * Default implementation does nothing.
