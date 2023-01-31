@@ -70,34 +70,27 @@ int main(int argc, char** argv) {
 		expr.terms[0].factors.push_back(taggedBilinear(i, -1, true));
 	}
 
-	hexaBasis[5].terms.emplace_back(one<Rational>());
-	hexaBasis[5].terms[0].factors.push_back(
-						taggedBilinear(4, -1, false));
-	hexaBasis[5].terms[0].factors.push_back(
-						taggedBilinear(1, -1, false));
-	hexaBasis[5].terms[0].factors.push_back(
-						taggedBilinear(3, -1, true));
-
-	IndexTag indexTags[4] = {
-		IndexTag{ -1, 0 },
-		IndexTag{ -1, 1 },
-		IndexTag{ -1, 2 },
-		IndexTag{ -1, 3 }
-	};
-
 	std::vector<TensorIndex> lower{
-		TensorIndex{ indexTags[0], false },
-		TensorIndex{ indexTags[1], false },
-		TensorIndex{ indexTags[2], false },
-		TensorIndex{ indexTags[3], false }
+		TensorIndex{ "\\kappa", false },
+		TensorIndex{ "\\lambda", false },
+		TensorIndex{ "\\mu", false },
+		TensorIndex{ "\\nu", false }
 	};
 
 	std::vector<TensorIndex> upper{
-		TensorIndex{ indexTags[0], true },
-		TensorIndex{ indexTags[1], true },
-		TensorIndex{ indexTags[2], true },
-		TensorIndex{ indexTags[3], true }
+		TensorIndex{ "\\kappa", true },
+		TensorIndex{ "\\lambda", true },
+		TensorIndex{ "\\mu", true },
+		TensorIndex{ "\\nu", true }
 	};
+
+	hexaBasis[5].terms.emplace_back(one<Rational>());
+	hexaBasis[5].terms[0].factors.push_back(
+						Bilinear::create(4, {}));
+	hexaBasis[5].terms[0].factors.push_back(
+						Bilinear::create(1, { lower[0] }));
+	hexaBasis[5].terms[0].factors.push_back(
+						Bilinear::create(3, { upper[0] }));
 
 	hexaBasis[6].terms.emplace_back(one<Rational>());
 	hexaBasis[6].terms[0].factors.push_back(
@@ -176,7 +169,7 @@ int main(int argc, char** argv) {
 					expr.fierzTransformed(0).fierzTransformed(1));
 
 			for (Identity& identity: identities) {
-				Printer prn{ "\\lambda", 2 };
+				Printer prn{ "\\sigma", 2 };
 				out << prn.latexify(identity) << std::endl;
 			}
 		}
