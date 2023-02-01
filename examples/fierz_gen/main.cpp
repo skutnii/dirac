@@ -166,7 +166,7 @@ int main(int argc, char** argv) {
 					collectTerms(expr.fierzTransformed(0));
 
 			identities[2].right = collectTerms(
-					expr.fierzTransformed(0).fierzTransformed(1));
+					expr.fierzTransformed(1).fierzTransformed(0));
 
 			for (Identity& identity: identities) {
 				Printer prn{ "\\sigma", 2 };
