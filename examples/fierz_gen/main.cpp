@@ -149,7 +149,8 @@ int main(int argc, char** argv) {
 			{"i_3", "i_3"}
 		};
 
-		for (const Expression& expr : hexaBasis) {
+		for (size_t i = 0; i < 1/*hexaBasis.size()*/; ++i) {
+			const Expression& expr = hexaBasis[i];
 			std::vector<Identity> identities;
 			identities.resize(3);
 
@@ -166,7 +167,7 @@ int main(int argc, char** argv) {
 					collectTerms(expr.fierzTransformed(0));
 
 			identities[2].right = collectTerms(
-					expr.fierzTransformed(0).fierzTransformed(1));
+					expr.fierzTransformed(1).fierzTransformed(0));
 
 			for (Identity& identity: identities) {
 				Printer prn{ "\\sigma", 2 };

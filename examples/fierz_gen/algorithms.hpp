@@ -74,6 +74,81 @@ Expression collectTerms(const Expression& src);
  */
 Bilinear taggedBilinear(int id, int tag, bool isUpper);
 
+//----------------------------------------------------------------------
+
+using IndexIdMap = std::unordered_map<IndexId, IndexId>;
+
+//----------------------------------------------------------------------
+
+/**
+ * Rename indices in a bilinear
+ * using second argument as replacement dictionary
+ */
+Bilinear renameIndices(const Bilinear& b, const IndexIdMap& repl);
+
+//----------------------------------------------------------------------
+
+/**
+ * Rename indices in a multilinear
+ * using second argument as replacement dictionary
+ */
+Multilinear renameIndices(const Multilinear& m, const IndexIdMap& repl);
+
+//----------------------------------------------------------------------
+
+/**
+ * Rename indices in a tensor polynomial
+ * using second argument as replacement dictionary
+ */
+template<typename Scalar>
+TensorPolynomial<Scalar>
+renameIndices(const TensorPolynomial<Scalar>& src,
+		const IndexIdMap& repl) {
+	TensorPolynomial<Scalar> res;
+	res.terms.reserve(src.terms.size());
+
+	for (const auto& srcTerm: src.terms) {
+		res.terms.emplace_back(srcTerm.coeff);
+		auto& destTerm = res.terms.back();
+		for (const auto& factor: srcTerm.factors) {
+			TensorIndices mappedIndices;
+			mappedIndices.reserve(factor.indices().size());
+
+			for (const TensorIndex& idx : factor.indices()) {
+				auto pIdx = repl.find(idx.id);
+				if (pIdx == repl.end())
+					mappedIndices.push_back(idx);
+				else
+					mappedIndices.emplace_back(
+							pIdx->second, idx.isUpper);
+			}
+
+			destTerm.factors.push_back(
+					dirac::algebra::LI::Tensor::create(
+								factor.id(), mappedIndices));
+		}
+	}
+
+	return res;
+}
+
+//----------------------------------------------------------------------
+
+/**
+ * Get all contracted indices in a term
+ */
+std::vector<IndexId> contractedIndices(const Expression::Term& term);
+
+//----------------------------------------------------------------------
+
+/**
+ * If two multilinears are equivalent up to a permutation of
+ * sigma-matrix indices, returns permutation sign,
+ * otherwise returns an empty optional
+ */
+std::optional<Complex<Rational>>
+equivalenceFactor(const Multilinear& m1, const Multilinear& m2);
+
 }
 
 #endif /* EXAMPLES_FIERZ_GEN_ALGORITHMS_HPP_ */
