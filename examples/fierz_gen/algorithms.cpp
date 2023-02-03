@@ -100,7 +100,7 @@ Expression collectTerms(const Expression& src) {
 	Expression res;
 
 	std::unordered_set<size_t> indices;
-	size_t termCount = res.terms.size();
+	size_t termCount = src.terms.size();
 	indices.reserve(termCount);
 	for (size_t i = 0; i < termCount; ++i)
 		indices.insert(i);
