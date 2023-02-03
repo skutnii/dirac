@@ -16,6 +16,7 @@
 #include "algebra/Gamma.hpp"
 #include "algebra/Complex.hpp"
 #include "ExprPrinter.hpp"
+#include <unordered_set>
 
 namespace fierz {
 
@@ -61,8 +62,30 @@ using Bilinear =
 		dirac::algebra::TensorBase<int, BilinearBasis, IndexId>;
 
 using TensorIndex = dirac::algebra::TensorIndex;
+using TensorIndices = dirac::algebra::TensorIndices;
 using IndexId = dirac::algebra::IndexId;
 using IndexTag = dirac::algebra::IndexTag;
+
+} /* namespace fierz */
+
+namespace std {
+
+template<>
+struct hash<fierz::Bilinear> {
+	const size_t operator()(const fierz::Bilinear& bilinear) const {
+		size_t res = static_cast<size_t>(bilinear.id());
+		for (const auto& idx: bilinear.indices())
+			res = res ^ std::hash<fierz::TensorIndex>{}(idx);
+
+		return res;
+	}
+};
+
+} /* namespace std */
+
+namespace fierz {
+
+using Multilinear = std::vector<Bilinear>;
 
 template<typename Scalar>
 using GammaPolynomial = dirac::algebra::GammaPolynomial<Scalar>;

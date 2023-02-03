@@ -133,23 +133,24 @@ int main(int argc, char** argv) {
 	hexaBasis[10].terms[0].factors.push_back(
 			Bilinear::create(2, { lower[2], upper[0] }));
 
+	std::vector<std::vector<std::pair<std::string, std::string>>>
+	leftIndices{
+		{ {"i_1", "i_1"}, {"i_2", "i_3"}, {"i_3", "i_2"} },
+		{ {"i_1", "i_2"}, {"i_2", "i_1"}, {"i_3", "i_3"} },
+		{ {"i_1", "i_2"}, {"i_2", "i_3"}, {"i_3", "i_1"} }
+	};
+
+	std::vector<std::pair<std::string, std::string>> rightIndices{
+		{"i_1", "i_1"},
+		{"i_2", "i_2"},
+		{"i_3", "i_3"}
+	};
+
 	{ //Sixth-order Fierz identities
 		out << "\\section{Sixth-order Fierz identities}" << std::endl;
 
-		std::vector<std::vector<std::pair<std::string, std::string>>>
-		leftIndices{
-			{ {"i_1", "i_1"}, {"i_2", "i_3"}, {"i_3", "i_2"} },
-			{ {"i_1", "i_2"}, {"i_2", "i_1"}, {"i_3", "i_3"} },
-			{ {"i_1", "i_2"}, {"i_2", "i_3"}, {"i_3", "i_1"} }
-		};
-
-		std::vector<std::pair<std::string, std::string>> rightIndices{
-			{"i_1", "i_1"},
-			{"i_2", "i_2"},
-			{"i_3", "i_3"}
-		};
-
-		for (const Expression& expr : hexaBasis) {
+		for (size_t i = 0; i < hexaBasis.size(); ++i) {
+			const Expression& expr = hexaBasis[i];
 			std::vector<Identity> identities;
 			identities.resize(3);
 
@@ -172,6 +173,131 @@ int main(int argc, char** argv) {
 				Printer prn{ "\\sigma", 2 };
 				out << prn.latexify(identity) << std::endl;
 			}
+		}
+	}
+
+	{
+		out << "\\section{Simplification tests}" << std::endl;
+
+		std::vector<Identity> tests;
+
+		tests.emplace_back();
+		tests[0].left.terms.emplace_back(
+				LI::TensorPolynomial<Rational>{ one<Rational>() });
+		tests[0].left.terms.back().factors.push_back(
+				Bilinear::create(2, {lower[1], lower[2]}));
+		tests[0].left.terms.emplace_back(
+				LI::TensorPolynomial<Rational>{ one<Rational>() });
+		tests[0].left.terms.back().factors.push_back(
+				Bilinear::create(2, {lower[1], lower[2]}));
+		tests[0].leftSpinorIndices = rightIndices;
+		tests[0].rightSpinorIndices = rightIndices;
+
+		tests.emplace_back();
+		tests[1].left.terms.emplace_back(
+				LI::TensorPolynomial<Rational>{ one<Rational>() });
+		tests[1].left.terms.back().factors.push_back(
+				Bilinear::create(2, {lower[1], lower[2]}));
+		tests[1].left.terms.emplace_back(
+				LI::TensorPolynomial<Rational>{ one<Rational>() });
+		tests[1].left.terms.back().factors.push_back(
+				Bilinear::create(2, {lower[2], lower[1]}));
+		tests[1].leftSpinorIndices = rightIndices;
+		tests[1].rightSpinorIndices = rightIndices;
+
+		tests.emplace_back();
+		tests[2].left.terms.emplace_back(
+				LI::TensorPolynomial<Rational>{ one<Rational>() });
+		tests[2].left.terms.back().factors.push_back(
+				Bilinear::create(2, {lower[1], lower[2]}));
+		tests[2].left.terms.back().factors.push_back(
+				Bilinear::create(1, {upper[1]}));
+
+		tests[2].left.terms.emplace_back(
+				LI::TensorPolynomial<Rational>{ one<Rational>() });
+		tests[2].left.terms.back().factors.push_back(
+				Bilinear::create(2, {lower[0], lower[2]}));
+		tests[2].left.terms.back().factors.push_back(
+				Bilinear::create(1, {upper[0]}));
+		tests[2].leftSpinorIndices = rightIndices;
+		tests[2].rightSpinorIndices = rightIndices;
+
+		tests.emplace_back();
+		tests[3].left.terms.emplace_back(
+				LI::TensorPolynomial<Rational>{ one<Rational>() });
+		tests[3].left.terms.back().factors.push_back(
+				Bilinear::create(2, {lower[1], lower[2]}));
+		tests[3].left.terms.back().factors.push_back(
+				Bilinear::create(1, {upper[1]}));
+
+		tests[3].left.terms.emplace_back(
+				LI::TensorPolynomial<Rational>{ one<Rational>() });
+		tests[3].left.terms.back().factors.push_back(
+				Bilinear::create(2, {lower[2], lower[0]}));
+		tests[3].left.terms.back().factors.push_back(
+				Bilinear::create(1, {upper[0]}));
+		tests[3].leftSpinorIndices = rightIndices;
+		tests[3].rightSpinorIndices = rightIndices;
+
+		tests.emplace_back();
+		tests[4].left.terms.emplace_back(
+				LI::TensorPolynomial<Rational>{ one<Rational>() });
+		tests[4].left.terms.back().factors.push_back(
+				Bilinear::create(2, {lower[1], lower[2]}));
+		tests[4].left.terms.back().factors.push_back(
+				Bilinear::create(1, {upper[1]}));
+
+		tests[4].left.terms.emplace_back(
+				LI::TensorPolynomial<Rational>{ one<Rational>() });
+		tests[4].left.terms.back().factors.push_back(
+				Bilinear::create(1, {upper[0]}));
+		tests[4].left.terms.back().factors.push_back(
+				Bilinear::create(2, {lower[2], lower[0]}));
+		tests[4].leftSpinorIndices = rightIndices;
+		tests[4].rightSpinorIndices = rightIndices;
+
+		tests.emplace_back();
+		tests[5].left.terms.emplace_back(
+				LI::Tensor::create(LI::Basis::eta,
+								{ lower[0], lower[1] }));
+		tests[5].left.terms.back().factors.push_back(
+				Bilinear::create(1, {upper[0]}));
+		tests[5].left.terms.back().factors.push_back(
+				Bilinear::create(1, {upper[1]}));
+
+		tests[5].left.terms.emplace_back(
+				LI::Tensor::create(LI::Basis::eta,
+								{ lower[1], lower[2] }));
+		tests[5].left.terms.back().factors.push_back(
+				Bilinear::create(1, {upper[1]}));
+		tests[5].left.terms.back().factors.push_back(
+				Bilinear::create(1, {upper[2]}));
+		tests[5].leftSpinorIndices = rightIndices;
+		tests[5].rightSpinorIndices = rightIndices;
+
+		tests.emplace_back();
+		tests[6].left.terms.emplace_back(
+				LI::Tensor::create(LI::Basis::eta,
+								{ lower[0], lower[1] }));
+		tests[6].left.terms.back().factors.push_back(
+				Bilinear::create(1, {upper[0]}));
+		tests[6].left.terms.back().factors.push_back(
+				Bilinear::create(1, {upper[1]}));
+
+		tests[6].left.terms.emplace_back(
+				LI::Tensor::create(LI::Basis::eta,
+								{ lower[1], lower[2] }));
+		tests[6].left.terms.back().factors.push_back(
+				Bilinear::create(3, {upper[1]}));
+		tests[6].left.terms.back().factors.push_back(
+				Bilinear::create(3, {upper[2]}));
+		tests[6].leftSpinorIndices = rightIndices;
+		tests[6].rightSpinorIndices = rightIndices;
+
+		for (Identity& test : tests) {
+			test.right = collectTerms(test.left);
+			Printer prn{ "\\sigma", 3 };
+			out << prn.latexify(test) << std::endl;
 		}
 	}
 

@@ -54,45 +54,53 @@ tryMerge(const Expression::Term& t1, const Expression::Term& t2) {
 	if (t2.factors.size() != factorCount)
 		return std::optional<Expression::Term>{};
 
-	IndexMap iMap;
-	for (size_t i = 0; i < factorCount; ++i) {
-		const Bilinear& f1 = t1.factors[i];
-		const Bilinear& f2 = t2.factors[i];
+	std::vector<IndexId> contracted1 = contractedIndices(t1);
+	std::vector<IndexId> contracted2 = contractedIndices(t2);
 
-		if ((f1.id() != f2.id()) ||
-				(f1.indices().size() != f2.indices().size()))
-			return std::optional<Expression::Term>{};
+	size_t dummyCount = contracted1.size();
+	if (dummyCount != contracted2.size())
+		return std::optional<Expression::Term>{};
 
-		size_t indexCount = f1.indices().size();
-		for (size_t j = 0; j < indexCount; ++j) {
-			TensorIndex from = f2.indices()[j];
-			from.isUpper = !from.isUpper;
-			TensorIndex to = f1.indices()[j];
-			to.isUpper = !to.isUpper;
+	using namespace dirac::algebra;
 
-			iMap.emplace(from, to);
-		}
-	}
+	std::optional<IndexIdMap> iMap;
+	Complex<Rational> factor = one<Rational>();
+	forPermutations(dummyCount,
+			[&](const Permutation& perm) {
+				if (iMap)
+					return;
 
-	Expression::Term res{ t1.coeff + mapIndices(t2.coeff, iMap) };
-	res.factors = t1.factors;
+				IndexIdMap maybeMap;
+				for (size_t i = 0; i < dummyCount; ++i)
+					maybeMap.emplace(contracted2[i],
+							contracted1[perm.map[i]]);
 
+				Multilinear mapped =
+						renameIndices(t2.factors, maybeMap);
+				std::optional<Complex<Rational> > equiv =
+						equivalenceFactor(mapped, t1.factors);
+				if (equiv) {
+					iMap = maybeMap;
+					factor = equiv.value();
+				}
+			});
+
+	if (!iMap)
+		return std::optional<Expression::Term>{};
+
+	Expression::Term res{ t1 };
+	res.coeff +=
+			factor * renameIndices<Rational>(t2.coeff, iMap.value());
 	return res;
 }
 
 //----------------------------------------------------------------------
 
 Expression collectTerms(const Expression& src) {
-	Expression res{ src };
-	for (Expression::Term& term : res.terms)
-		std::sort(term.factors.begin(), term.factors.end(),
-				[](const Bilinear& f1, const Bilinear& f2) {
-					return (f1.id() < f2.id());
-				});
+	Expression res;
 
-	std::vector<Expression::Term> tmpTerms;
 	std::unordered_set<size_t> indices;
-	size_t termCount = res.terms.size();
+	size_t termCount = src.terms.size();
 	indices.reserve(termCount);
 	for (size_t i = 0; i < termCount; ++i)
 		indices.insert(i);
@@ -103,10 +111,10 @@ Expression collectTerms(const Expression& src) {
 		std::unordered_set<size_t> rest;
 		rest.reserve(indices.size());
 
-		Expression::Term term = res.terms[i];
+		Expression::Term term = src.terms[i];
 		for (size_t j : indices) {
 			std::optional<Expression::Term> mergeRes =
-							tryMerge(term, res.terms[j]);
+							tryMerge(term, src.terms[j]);
 
 			if (mergeRes)
 				term = mergeRes.value();
@@ -114,11 +122,10 @@ Expression collectTerms(const Expression& src) {
 				rest.insert(j);
 		}
 
-		tmpTerms.push_back(term);
+		res.terms.push_back(term);
 		indices = rest;
 	}
 
-	res.terms = tmpTerms;
 	return res;
 }
 
@@ -142,6 +149,112 @@ Bilinear taggedBilinear(int id, int tag, bool isUpper) {
 	default:
 		throw std::runtime_error{ "Invalid bilinear ID" };
 	}
+}
+
+//----------------------------------------------------------------------
+
+Bilinear renameIndices(const Bilinear& b, const IndexIdMap& repl) {
+	TensorIndices mapped;
+	mapped.reserve(b.indices().size());
+
+	for (const TensorIndex& idx: b.indices()) {
+		auto iter = repl.find(idx.id);
+		if (iter == repl.end())
+			mapped.push_back(idx);
+		else
+			mapped.emplace_back(iter->second, idx.isUpper);
+	}
+
+	return Bilinear::create(b.id(), mapped);
+}
+
+//----------------------------------------------------------------------
+
+Multilinear
+renameIndices(const Multilinear& m, const IndexIdMap& repl) {
+	Multilinear res;
+	res.reserve(m.size());
+	for (const Bilinear& b: m)
+		res.push_back(renameIndices(b, repl));
+
+	return res;
+}
+
+//----------------------------------------------------------------------
+
+using IndexIdSet = std::unordered_set<IndexId>;
+
+std::vector<IndexId> contractedIndices(const Expression::Term& term) {
+	std::unordered_set<TensorIndex> freeIndices;
+	IndexIdSet res;
+
+	for (const Bilinear& b : term.factors)
+		for (const TensorIndex& idx: b.indices()) {
+			TensorIndex dual{ idx.id, !idx.isUpper };
+			if (freeIndices.find(dual) != freeIndices.end()) {
+				res.insert(idx.id);
+				freeIndices.erase(dual);
+			}
+
+			freeIndices.insert(idx);
+		}
+
+
+	if (!term.coeff.terms.empty()) {
+		std::unordered_set<TensorIndex> coeffIndices;
+
+		for (const auto& factor: term.coeff.terms[0].factors)
+			coeffIndices.insert(
+					factor.indices().begin(),
+					factor.indices().end());
+
+		for (const TensorIndex& idx: coeffIndices) {
+			TensorIndex dual{ idx.id, !idx.isUpper };
+			if (freeIndices.find(dual) != freeIndices.end())
+				res.insert(idx.id);
+		}
+	}
+
+	return std::vector<IndexId>{ res.begin(), res.end() };
+}
+
+//----------------------------------------------------------------------
+
+std::optional<Complex<Rational> >
+equivalenceFactor(const Multilinear& m1, const Multilinear &m2) {
+	if (m1.size() != m2.size())
+		return std::optional<Complex<Rational> >{};
+
+	Complex<Rational> factor = dirac::algebra::one<Rational>();
+
+	std::unordered_set<Bilinear> factors{ m2.begin(), m2.end() };
+	for (const Bilinear& b1 : m1) {
+		auto pb2 = std::find_if(factors.begin(), factors.end(),
+				[&](const Bilinear& b2) -> bool {
+					if (b2 == b1)
+						return true;
+
+					if ((b2.id() == b1.id()) && (b1.id() == 2)) {
+						if ((b1.indices().size() != 2)
+								|| (b2.indices().size() != 2))
+							throw std::runtime_error{
+									"Invalid index count" };
+
+						if ((b1.indices()[0] == b2.indices()[1])
+							&& (b1.indices()[1] == b2.indices()[0])) {
+							factor *= - dirac::algebra::one<Rational>();
+							return true;
+						}
+					}
+
+					return false;
+				});
+
+		if (pb2 == factors.end())
+			return std::optional<Complex<Rational> >{};
+	}
+
+	return factor;
 }
 
 }
