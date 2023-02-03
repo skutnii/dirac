@@ -146,6 +146,10 @@ public:
 	 * \omega_1, the second one to \omega_2 and so on.
 	 */
 	std::string mapIndexId(const algebra::IndexId& aId);
+
+	using TermGroups = std::vector<LatexTerms>;
+
+	std::string latexify(const TermGroups& termGroups);
 private:
 	std::string _dummyIndexName;
 	size_t _lineSize;
@@ -337,7 +341,7 @@ ExprPrinter<Scalar>::latexify(const CanonicalExpr<Scalar>& expr) {
 	if (expr.isScalar(static_cast<Scalar>(-1)))
 		return "-1";
 
-	LatexTerms latexCoeffs[] = {
+	TermGroups latexCoeffs {
 			latexify(expr.coeffs(0)),
 			latexify(expr.coeffs(1)),
 			latexify(expr.coeffs(2)),
@@ -376,9 +380,18 @@ ExprPrinter<Scalar>::latexify(const CanonicalExpr<Scalar>& expr) {
 	if (!latexCoeffs[4].empty())
 		latexCoeffs[4].back().body += "\\gamma^5";
 
+	return latexify(latexCoeffs);
+}
+
+//----------------------------------------------------------------------
+
+template<typename Scalar>
+std::string
+ExprPrinter<Scalar>::latexify(
+		const ExprPrinter<Scalar>::TermGroups& latexCoeffs) {
 	LatexTerms allTerms;
 	size_t termCount = 0;
-	for (size_t i = 0; i < 5; ++i)
+	for (size_t i = 0; i < latexCoeffs.size(); ++i)
 		for (size_t j = 0; j < latexCoeffs[i].size(); ++j) {
 			LatexTerm term = latexCoeffs[i][j];
 
