@@ -63,6 +63,19 @@ tryMerge(const Expression::Term& t1, const Expression::Term& t2) {
 
 	using namespace dirac::algebra;
 
+	if (dummyCount == 0) {
+		std::optional<Complex<Rational> > equiv =
+							equivalenceFactor(t1.factors, t2.factors);
+
+		if (!equiv)
+			return std::optional<Expression::Term>{};
+
+		Expression::Term res{ t1 };
+		res.coeff += equiv.value() * t2.coeff;
+
+		return res;
+	}
+
 	std::optional<IndexIdMap> iMap;
 	Complex<Rational> factor = one<Rational>();
 	forPermutations(dummyCount,
@@ -91,6 +104,7 @@ tryMerge(const Expression::Term& t1, const Expression::Term& t2) {
 	Expression::Term res{ t1 };
 	res.coeff +=
 			factor * renameIndices<Rational>(t2.coeff, iMap.value());
+
 	return res;
 }
 
@@ -252,6 +266,8 @@ equivalenceFactor(const Multilinear& m1, const Multilinear &m2) {
 
 		if (pb2 == factors.end())
 			return std::optional<Complex<Rational> >{};
+		else
+			factors.erase(pb2);
 	}
 
 	return factor;
