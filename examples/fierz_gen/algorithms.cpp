@@ -241,7 +241,7 @@ equivalenceFactor(const Multilinear& m1, const Multilinear &m2) {
 
 	Complex<Rational> factor = dirac::algebra::one<Rational>();
 
-	std::unordered_set<Bilinear> factors{ m2.begin(), m2.end() };
+	Multilinear factors{ m2.begin(), m2.end() };
 	for (const Bilinear& b1 : m1) {
 		auto pb2 = std::find_if(factors.begin(), factors.end(),
 				[&](const Bilinear& b2) -> bool {
