@@ -294,6 +294,29 @@ int main(int argc, char** argv) {
 		tests[6].leftSpinorIndices = rightIndices;
 		tests[6].rightSpinorIndices = rightIndices;
 
+		tests.emplace_back();
+
+		tests[7].left.terms.emplace_back(
+				LI::TensorPolynomial<Rational>{ one<Rational>() });
+		tests[7].left.terms.back().factors.push_back(
+				Bilinear::create(0, {}));
+		tests[7].left.terms.back().factors.push_back(
+				Bilinear::create(4, {}));
+		tests[7].left.terms.back().factors.push_back(
+				Bilinear::create(4, {}));
+
+		tests[7].left.terms.emplace_back(
+				LI::TensorPolynomial<Rational>{ one<Rational>() });
+		tests[7].left.terms.back().factors.push_back(
+				Bilinear::create(4, {}));
+		tests[7].left.terms.back().factors.push_back(
+				Bilinear::create(4, {}));
+		tests[7].left.terms.back().factors.push_back(
+				Bilinear::create(4, {}));
+
+		tests[7].leftSpinorIndices = rightIndices;
+		tests[7].rightSpinorIndices = rightIndices;
+
 		for (Identity& test : tests) {
 			test.right = collectTerms(test.left);
 			Printer prn{ "\\sigma", 3 };

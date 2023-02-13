@@ -47,6 +47,9 @@ Expression Expression::fierzTransformed(size_t pos) const {
 					reduceGamma<Rational>(triplet);
 
 			for (size_t j = 0; j < 5; ++j) {
+				if (reduced.coeffs(j).isZero())
+					continue;
+
 				TensorPolynomial coeff =
 						Complex<Rational>{ multiplier, Rational{ 0 } }
 						* term.coeff
