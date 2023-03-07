@@ -12,11 +12,20 @@
 #include "algorithms.hpp"
 #include "Identity.hpp"
 #include "Printer.hpp"
+#include <functional>
+#include <vector>
+
+using namespace fierz;
+using namespace dirac::algebra;
+
+static void appendExpr(std::vector<Expression>& list,
+                       std::function<void (Expression&)> construct) {
+    list.emplace_back();
+    Expression& expr = list.back();
+    construct(expr);
+}
 
 int main(int argc, char** argv) {
-	using namespace fierz;
-	using namespace dirac::algebra;
-
 	std::cout << "Sixth-order Fierz identities generator" << std::endl;
 
 	std::ofstream out{ "fierz.tex" };
@@ -61,14 +70,13 @@ int main(int argc, char** argv) {
 	}
 
 	std::vector<Expression> hexaBasis;
-	hexaBasis.resize(11);
-	for (int i = 0; i < 5; ++i) {
-		Expression& expr = hexaBasis[i];
-		expr.terms.emplace_back(one<Rational>());
-		expr.terms[0].factors.push_back(taggedBilinear(0, -1, false));
-		expr.terms[0].factors.push_back(taggedBilinear(i, -1, false));
-		expr.terms[0].factors.push_back(taggedBilinear(i, -1, true));
-	}
+	for (int i = 0; i < 5; ++i)
+	    appendExpr(hexaBasis, [&](Expression& expr) {
+	        expr.terms.emplace_back(one<Rational>());
+	        expr.terms[0].factors.push_back(taggedBilinear(0, -1, false));
+	        expr.terms[0].factors.push_back(taggedBilinear(i, -1, false));
+	        expr.terms[0].factors.push_back(taggedBilinear(i, -1, true));
+	    });
 
 	std::vector<TensorIndex> lower{
 		TensorIndex{ "\\kappa", false },
@@ -84,54 +92,76 @@ int main(int argc, char** argv) {
 		TensorIndex{ "\\nu", true }
 	};
 
-	hexaBasis[5].terms.emplace_back(one<Rational>());
-	hexaBasis[5].terms[0].factors.push_back(
-						Bilinear::create(4, {}));
-	hexaBasis[5].terms[0].factors.push_back(
-						Bilinear::create(1, { lower[0] }));
-	hexaBasis[5].terms[0].factors.push_back(
-						Bilinear::create(3, { upper[0] }));
+    appendExpr(hexaBasis, [&](Expression& expr) {
+        expr.terms.emplace_back(one<Rational>());
+        expr.terms[0].factors.push_back(
+                            Bilinear::create(4, {}));
+        expr.terms[0].factors.push_back(
+                            Bilinear::create(1, { lower[0] }));
+        expr.terms[0].factors.push_back(
+                            Bilinear::create(3, { upper[0] }));
+    });
 
-	hexaBasis[6].terms.emplace_back(one<Rational>());
-	hexaBasis[6].terms[0].factors.push_back(
-			Bilinear::create(1, { lower[1] }));
-	hexaBasis[6].terms[0].factors.push_back(
-			Bilinear::create(1, { lower[2] }));
-	hexaBasis[6].terms[0].factors.push_back(
-			Bilinear::create(2, { upper[1], upper[2] }));
+    appendExpr(hexaBasis, [&](Expression& expr) {
+        expr.terms.emplace_back(one<Rational>());
+        expr.terms[0].factors.push_back(
+                            Bilinear::create(1, { lower[0] }));
+        expr.terms[0].factors.push_back(
+                            Bilinear::create(4, {}));
+        expr.terms[0].factors.push_back(
+                            Bilinear::create(3, { upper[0] }));
+    });
 
-	hexaBasis[7].terms.emplace_back(one<Rational>());
-	hexaBasis[7].terms[0].factors.push_back(
-			Bilinear::create(3, { lower[1] }));
-	hexaBasis[7].terms[0].factors.push_back(
-			Bilinear::create(3, { lower[2] }));
-	hexaBasis[7].terms[0].factors.push_back(
-			Bilinear::create(2, { upper[1], upper[2] }));
+    appendExpr(hexaBasis, [&](Expression& expr) {
+        expr.terms.emplace_back(one<Rational>());
+        expr.terms[0].factors.push_back(
+                Bilinear::create(1, { lower[1] }));
+        expr.terms[0].factors.push_back(
+                Bilinear::create(1, { lower[2] }));
+        expr.terms[0].factors.push_back(
+                Bilinear::create(2, { upper[1], upper[2] }));
+    });
 
-	hexaBasis[8].terms.emplace_back(LI::TensorPolynomial<Rational>{
-			LI::Tensor::create(LI::Basis::epsilon, lower)});
-	hexaBasis[8].terms[0].factors.push_back(
-			Bilinear::create(1, { upper[0] }));
-	hexaBasis[8].terms[0].factors.push_back(
-			Bilinear::create(3, { upper[1] }));
-	hexaBasis[8].terms[0].factors.push_back(
-			Bilinear::create(2, { upper[2], upper[3] }));
+    appendExpr(hexaBasis, [&](Expression& expr) {
+        expr.terms.emplace_back(one<Rational>());
+        expr.terms[0].factors.push_back(
+                Bilinear::create(3, { lower[1] }));
+        expr.terms[0].factors.push_back(
+                Bilinear::create(3, { lower[2] }));
+        expr.terms[0].factors.push_back(
+                Bilinear::create(2, { upper[1], upper[2] }));
+    });
 
-	hexaBasis[9].terms.emplace_back(LI::TensorPolynomial<Rational>{
-			LI::Tensor::create(LI::Basis::epsilon, lower)});
-	hexaBasis[9].terms[0].factors.push_back(Bilinear::create(4, {}));
-	hexaBasis[9].terms[0].factors.push_back(
-			Bilinear::create(2, { upper[0], upper[1] }));
-	hexaBasis[9].terms[0].factors.push_back(
-			Bilinear::create(2, { upper[2], upper[3] }));
+    appendExpr(hexaBasis, [&](Expression& expr) {
+        expr.terms.emplace_back(LI::TensorPolynomial<Rational>{
+                LI::Tensor::create(LI::Basis::epsilon, lower)});
+        expr.terms[0].factors.push_back(
+                Bilinear::create(1, { upper[0] }));
+        expr.terms[0].factors.push_back(
+                Bilinear::create(3, { upper[1] }));
+        expr.terms[0].factors.push_back(
+                Bilinear::create(2, { upper[2], upper[3] }));
+    });
 
-	hexaBasis[10].terms.emplace_back(one<Rational>());
-	hexaBasis[10].terms[0].factors.push_back(
-			Bilinear::create(2, { lower[0], upper[1] }));
-	hexaBasis[10].terms[0].factors.push_back(
-			Bilinear::create(2, { lower[1], upper[2] }));
-	hexaBasis[10].terms[0].factors.push_back(
-			Bilinear::create(2, { lower[2], upper[0] }));
+    appendExpr(hexaBasis, [&](Expression& expr) {
+        expr.terms.emplace_back(LI::TensorPolynomial<Rational>{
+                LI::Tensor::create(LI::Basis::epsilon, lower)});
+        expr.terms[0].factors.push_back(Bilinear::create(4, {}));
+        expr.terms[0].factors.push_back(
+                Bilinear::create(2, { upper[0], upper[1] }));
+        expr.terms[0].factors.push_back(
+                Bilinear::create(2, { upper[2], upper[3] }));
+    });
+
+    appendExpr(hexaBasis, [&](Expression& expr) {
+        expr.terms.emplace_back(one<Rational>());
+        expr.terms[0].factors.push_back(
+                Bilinear::create(2, { lower[0], upper[1] }));
+        expr.terms[0].factors.push_back(
+                Bilinear::create(2, { lower[1], upper[2] }));
+        expr.terms[0].factors.push_back(
+                Bilinear::create(2, { lower[2], upper[0] }));
+    });
 
 	std::vector<std::vector<std::pair<std::string, std::string>>>
 	leftIndices{
