@@ -146,6 +146,17 @@ int main(int argc, char** argv) {
     appendExpr(hexaBasis, [&](Expression& expr) {
         expr.terms.emplace_back(LI::TensorPolynomial<Rational>{
                 LI::Tensor::create(LI::Basis::epsilon, lower)});
+        expr.terms[0].factors.push_back(
+                Bilinear::create(3, { upper[0] }));
+        expr.terms[0].factors.push_back(
+                Bilinear::create(1, { upper[1] }));
+        expr.terms[0].factors.push_back(
+                Bilinear::create(2, { upper[2], upper[3] }));
+    });
+
+    appendExpr(hexaBasis, [&](Expression& expr) {
+        expr.terms.emplace_back(LI::TensorPolynomial<Rational>{
+                LI::Tensor::create(LI::Basis::epsilon, lower)});
         expr.terms[0].factors.push_back(Bilinear::create(4, {}));
         expr.terms[0].factors.push_back(
                 Bilinear::create(2, { upper[0], upper[1] }));
