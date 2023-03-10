@@ -174,6 +174,17 @@ int main(int argc, char** argv) {
                 Bilinear::create(2, { lower[2], upper[0] }));
     });
 
+    appendExpr(hexaBasis, [&](Expression& expr) {
+        expr.terms.emplace_back(one<Rational>());
+        expr.terms[0].factors.push_back(
+                Bilinear::create(2, { lower[1], upper[2] }));
+        expr.terms[0].factors.push_back(
+                Bilinear::create(2, { lower[0], upper[1] }));
+        expr.terms[0].factors.push_back(
+                Bilinear::create(2, { lower[2], upper[0] }));
+    });
+
+
 	std::vector<std::vector<std::pair<std::string, std::string>>>
 	leftIndices{
 		{ {"i_1", "i_1"}, {"i_2", "i_3"}, {"i_3", "i_2"} },
